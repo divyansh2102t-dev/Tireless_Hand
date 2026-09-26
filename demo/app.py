@@ -1100,14 +1100,10 @@ HTML_STANDALONE_UI = """<!DOCTYPE html>
             <div class="preset-chip" onclick="setTarget('http://localhost:8000/fleet')">🔒 Security Route Guard</div>
         </div>
 
-        <!-- Settings Row -->
+        <!-- Viewport & Audit Capabilities Indicator -->
         <div class="controls-row">
-            <div class="toggle-group">
-                <label class="custom-toggle">
-                    <input type="checkbox" id="headed-toggle">
-                    <span class="toggle-slider"></span>
-                </label>
-                <label for="headed-toggle" class="toggle-text">👁️ Watch Live in Browser (Headed Mode)</label>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8;">
+                <span style="color: #38bdf8; font-weight: 600;">Automated Multi-Viewport Verification:</span>
             </div>
 
             <div class="viewport-badges">
@@ -1192,7 +1188,7 @@ HTML_STANDALONE_UI = """<!DOCTYPE html>
 
         async function triggerAction(action) {
             const target = document.getElementById("target-url-input").value || "http://localhost:5173";
-            const isHeaded = document.getElementById("headed-toggle").checked;
+            const isHeaded = false;
 
             const monitorSection = document.getElementById("monitor-section");
             const monitorHeadline = document.getElementById("monitor-headline");
@@ -1208,7 +1204,7 @@ HTML_STANDALONE_UI = """<!DOCTYPE html>
 
             logBox.innerHTML = `
                 <div class="log-entry log-info">[*] Launching autonomous ${action} agent...</div>
-                <div class="log-entry log-info">[*] Target: ${target} | Headless: ${!isHeaded}</div>
+                <div class="log-entry log-info">[*] Target: ${target}</div>
                 <div class="log-entry">[*] Inspecting DOM accessibility tree and multi-viewport boundaries...</div>
             `;
 
