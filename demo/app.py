@@ -1374,6 +1374,64 @@ def run_background_benchmark():
     threading.Thread(target=_async_task_wrapper, args=(_bench(),), daemon=True).start()
 
 
+def run_background_perf_audit(target_url: str, headless: bool):
+    global AGENT_STATE
+    AGENT_STATE["status"] = "running"
+    AGENT_STATE["action"] = "perf_audit"
+    AGENT_STATE["message"] = f"Auditing Performance & Web Vitals for {target_url}..."
+
+    async def _perf_audit():
+        global AGENT_STATE
+        try:
+            from tireless_hand.browser.engine import BrowserEngine, BrowserConfig
+            from tireless_hand.auditors.performance_auditor import PerformanceAuditor
+
+            config = BrowserConfig(headless=headless, slow_mo=0, record_video=False)
+            engine = BrowserEngine(config)
+            await engine.start()
+            page = engine.get_page()
+            auditor = PerformanceAuditor()
+            report = await auditor.audit_page_performance(page, target_url, test_duration_sec=2.5)
+            await engine.stop()
+
+            AGENT_STATE["status"] = "done"
+            AGENT_STATE["message"] = f"Performance Audit Complete! Detected {len(report.issues)} issues, FPS: {report.fps_average}"
+            AGENT_STATE["last_result"] = {
+                "target": target_url,
+                "fps": report.fps_average,
+                "heap_growth_kb": report.heap_growth_kb,
+                "issues_count": len(report.issues),
+                "report": "/reports/submission.html",
+                "markdown": "/reports/LEVEL2_SUBMISSION_WRITEUP.md"
+            }
+        except Exception as e:
+            AGENT_STATE["status"] = "done"
+            AGENT_STATE["message"] = f"Performance audit error: {e}"
+
+    threading.Thread(target=_async_task_wrapper, args=(_perf_audit(),), daemon=True).start()
+
+
+def run_background_perf_benchmark():
+    global AGENT_STATE
+    AGENT_STATE["status"] = "running"
+    AGENT_STATE["action"] = "perf_benchmark"
+    AGENT_STATE["message"] = "Running 8-vector Level 2 Performance Benchmark suite..."
+
+    async def _perf_bench():
+        global AGENT_STATE
+        try:
+            from benchmarks.run_level2_perf_benchmark import run_perf_benchmark
+            res = await run_perf_benchmark()
+            AGENT_STATE["status"] = "done"
+            AGENT_STATE["message"] = f"Level 2 Benchmark Complete! Precision: {res['precision']*100:.1f}%, Recall: {res['recall']*100:.1f}%, F1: {res['f1_score']*100:.1f}%"
+            AGENT_STATE["last_result"] = res
+        except Exception as e:
+            AGENT_STATE["status"] = "done"
+            AGENT_STATE["message"] = f"Performance benchmark error: {e}"
+
+    threading.Thread(target=_async_task_wrapper, args=(_perf_bench(),), daemon=True).start()
+
+
 class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -1409,7 +1467,11 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
 
         # Dedicated Agent HUD
         if path in ("/ui", "/hud"):
-            self._send_html(HTML_STANDALONE_UI)
+            ui_file = Path(__file__).resolve().parent / "templates" / "ui.html"
+            if not ui_file.exists():
+                ui_file = Path("demo/templates/ui.html").resolve()
+            html = ui_file.read_text(encoding="utf-8") if ui_file.exists() else HTML_STANDALONE_UI
+            self._send_html(html)
             return
 
         # Direct alias for broken mutation lab
@@ -1560,6 +1622,13 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"ok": True, "message": f"Audit launched for {target}"})
             return
 
+        elif path == "/api/run_perf_audit":
+            target = payload.get("url", "http://localhost:8000/dashboard")
+            headless = payload.get("headless", True)
+            run_background_perf_audit(target, headless)
+            self._send_json({"ok": True, "message": f"Performance Audit launched for {target}"})
+            return
+
         elif path == "/api/run_explore":
             target = payload.get("url", "http://localhost:8000/login")
             headless = payload.get("headless", True)
@@ -1569,7 +1638,12 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/run_benchmark":
             run_background_benchmark()
-            self._send_json({"ok": True, "message": "12-vector benchmark launched"})
+            self._send_json({"ok": True, "message": "12-vector Level 1 benchmark launched"})
+            return
+
+        elif path == "/api/run_perf_benchmark":
+            run_background_perf_benchmark()
+            self._send_json({"ok": True, "message": "8-vector Level 2 performance benchmark launched"})
             return
 
         elif path == "/login_submit":
