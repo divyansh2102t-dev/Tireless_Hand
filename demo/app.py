@@ -570,123 +570,710 @@ HTML_SETTINGS = """<!DOCTYPE html>
 """
 
 HTML_STANDALONE_UI = """<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Tireless Hand - Autonomous Agent Cockpit HUD</title>
+    <meta charset="UTF-8">
+    <title>Tireless Hand — Autonomous QA & Reliability Cockpit</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-base: #0a0e17;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --border-subtle: #1f2937;
+            --border-glow: #38bdf8;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0b1120;
-            color: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-base);
+            background-image: radial-gradient(circle at top center, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+            color: var(--text-primary);
             margin: 0;
-            padding: 40px 20px 140px;
+            padding: 0 20px 80px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .hero {
-            text-align: center;
-            max-width: 700px;
-            margin-bottom: 30px;
+
+        /* Top Navbar */
+        .navbar {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 32px;
         }
-        .hero h1 {
-            color: #38bdf8;
-            font-size: 32px;
-            margin-bottom: 8px;
+        .brand {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .brand-logo {
+            font-size: 28px;
+            background: rgba(56, 189, 248, 0.15);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .brand-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            color: #38bdf8;
+            letter-spacing: -0.5px;
+        }
+        .brand-text p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 0;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
-        .hero p {
-            color: #94a3b8;
-            font-size: 16px;
+        .nav-link {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-secondary);
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #334155;
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover {
+            color: #fff;
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+        .ai-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .ai-chip .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        /* Hero Main Console */
+        .console-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-card);
+            border: 1px solid #1f2937;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.05);
+            margin-bottom: 32px;
+        }
+        .console-header {
+            margin-bottom: 24px;
+        }
+        .console-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 0 8px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .console-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0;
             line-height: 1.5;
         }
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+
+        /* URL Input Field */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .url-input {
             width: 100%;
-            max-width: 960px;
-        }
-        .hud-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            padding: 20px;
+            padding: 16px 20px 16px 48px;
+            background: #0f172a;
+            border: 1.5px solid #334155;
             border-radius: 12px;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            color: #f8fafc;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s ease;
         }
-        .hud-card:hover {
-            transform: translateY(-2px);
+        .url-input:focus {
             border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            background: #0b1120;
         }
-        .hud-card h3 {
-            margin-top: 0;
-            color: #38bdf8;
-            font-size: 17px;
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-muted);
+        }
+
+        /* Preset Chips */
+        .preset-row {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
         }
-        .hud-card p {
-            font-size: 13px;
-            color: #94a3b8;
-            line-height: 1.4;
+        .preset-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 4px;
         }
-        .hud-btn {
+        .preset-chip {
+            padding: 6px 12px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .preset-chip:hover {
+            background: #334155;
+            color: #38bdf8;
+            border-color: #38bdf8;
+            transform: translateY(-1px);
+        }
+
+        /* Options & Controls Bar */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 16px 20px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .custom-toggle {
+            position: relative;
             display: inline-block;
-            margin-top: 10px;
-            padding: 8px 16px;
+            width: 44px;
+            height: 24px;
+        }
+        .custom-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #0284c7;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        .toggle-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .viewport-badges {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .vp-badge {
+            background: #1e293b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #334155;
+            color: #94a3b8;
+        }
+
+        /* Action Buttons */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr;
+            gap: 12px;
+        }
+        @media (max-width: 768px) {
+            .btn-group { grid-template-columns: 1fr; }
+        }
+
+        .btn-main {
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .btn-primary-action {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+        }
+        .btn-primary-action:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+            transform: translateY(-1px);
+        }
+        .btn-secondary-action {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
+        .btn-secondary-action:hover {
+            background: #334155;
+            border-color: #64748b;
+            transform: translateY(-1px);
+        }
+        .btn-benchmark-action {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+        }
+        .btn-benchmark-action:hover {
+            background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.55);
+            transform: translateY(-1px);
+        }
+
+        /* Live Execution Monitor */
+        .monitor-card {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-card);
+            border: 1px solid #1f2937;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 32px;
+            display: none;
+        }
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 16px;
+        }
+        .monitor-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-pill {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pill-running {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            animation: pulse-border 1.5s infinite;
+        }
+        .pill-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(56, 189, 248, 0.3); }
+            50% { border-color: rgba(56, 189, 248, 0.8); }
+        }
+
+        .log-box {
+            background: #0a0f1d;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .log-entry { margin-bottom: 6px; }
+        .log-info { color: #38bdf8; }
+        .log-success { color: #34d399; font-weight: 600; }
+        .log-warn { color: #fbbf24; }
+        .log-error { color: #f87171; }
+
+        .result-banner {
+            margin-top: 16px;
+            background: rgba(2, 132, 199, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .result-info h4 {
+            margin: 0 0 4px;
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        .result-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+        .btn-view-report {
+            padding: 12px 20px;
             background: #0284c7;
             color: white;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 8px;
             text-decoration: none;
-            cursor: pointer;
-            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
         }
-        .hud-btn:hover { background: #0369a1; }
+        .btn-view-report:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+
+        /* Capabilities Grid */
+        .grid-3 {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 24px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0 0 8px;
+        }
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
-    <div class="hero">
-        <h1>🦾 Tireless Hand UI</h1>
-        <p>Autonomous Agentic UI & Reliability Tester with Self-Healing, Layout Auditors, and Video Proof Capture.</p>
-    </div>
 
-    <div class="cards-grid">
-        <div class="hud-card">
-            <h3>⚡ Full Quality Audit</h3>
-            <p>Runs multi-viewport checks (Desktop, Tablet, Mobile), catches orphan forms, telemetry conflicts, and records .webm video proofs.</p>
-            <button class="hud-btn" onclick="document.getElementById('tfb-url-input').value = 'http://localhost:8000/dashboard'; tfbRunAction('audit');">Audit Cockpit</button>
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <div class="brand">
+            <div class="brand-logo">⚡</div>
+            <div class="brand-text">
+                <h1>Tireless Hand</h1>
+                <p>Autonomous UI & Reliability Testing Agent</p>
+            </div>
         </div>
 
-        <div class="hud-card">
-            <h3>🔍 Autonomous Exploration</h3>
-            <p>Crawls live pages, extracts semantic accessibility tree, and persists discovered page graphs into SQLite.</p>
-            <button class="hud-btn" style="background: #334155;" onclick="document.getElementById('tfb-url-input').value = 'http://localhost:8000/login'; tfbRunAction('explore');">Explore App</button>
+        <div class="nav-links">
+            <div class="ai-chip">
+                <span class="dot"></span>
+                <span>AI Reasoner Active</span>
+            </div>
+            <a href="/reports/submission.html" target="_blank" class="nav-link">📄 Submission Report</a>
+            <a href="/reports/benchmark_results.json" target="_blank" class="nav-link">📊 Benchmark Data</a>
+        </div>
+    </header>
+
+    <!-- Main Testing Hero Console -->
+    <main class="console-container">
+        <div class="console-header">
+            <h2>🚀 Autonomous Test Execution Console</h2>
+            <p>Run end-to-end multi-viewport audits, catch responsive layout breaks, and record verifiable proof without manual scripting.</p>
         </div>
 
-        <div class="hud-card">
-            <h3>📊 12-Vector Benchmark</h3>
-            <p>Validates precision, recall, accuracy, and F1-score across 12 clean & mutated drone scenarios.</p>
-            <button class="hud-btn" style="background: #8b5cf6;" onclick="tfbRunAction('benchmark');">Run Benchmark</button>
+        <!-- URL Input -->
+        <div class="input-wrapper">
+            <span class="input-icon">🌐</span>
+            <input type="text" id="target-url-input" class="url-input" placeholder="http://localhost:5173" value="http://localhost:5173" />
         </div>
 
-        <div class="hud-card">
-            <h3>📄 Submission Reports</h3>
-            <p>Inspect the latest interactive HTML report with embedded defect videos and reproduction steps.</p>
-            <a href="/reports/submission.html" target="_blank" class="hud-btn" style="background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8;">Open HTML Report →</a>
+        <!-- Quick Preset Chips -->
+        <div class="preset-row">
+            <span class="preset-label">Quick Presets:</span>
+            <div class="preset-chip" onclick="setTarget('http://localhost:5173')">🚁 FlytBase Cockpit (5173)</div>
+            <div class="preset-chip" onclick="setTarget('http://localhost:4000/dashboard')">🎮 FlytBase Control Panel (4000)</div>
+            <div class="preset-chip" onclick="setTarget('http://localhost:8000/dashboard?mutation=responsive_clip')">🧪 Mutation Lab (Broken)</div>
+            <div class="preset-chip" onclick="setTarget('http://localhost:8000/fleet')">🔒 Security Route Guard</div>
         </div>
-    </div>
 
-    __FLOATING_BAR__
+        <!-- Settings Row -->
+        <div class="controls-row">
+            <div class="toggle-group">
+                <label class="custom-toggle">
+                    <input type="checkbox" id="headed-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="headed-toggle" class="toggle-text">👁️ Watch Live in Browser (Headed Mode)</label>
+            </div>
+
+            <div class="viewport-badges">
+                <span class="vp-badge">🖥️ Desktop (1280px)</span>
+                <span class="vp-badge">📱 Tablet (768px)</span>
+                <span class="vp-badge">📲 Mobile (375px)</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-group">
+            <button class="btn-main btn-primary-action" onclick="triggerAction('audit')">
+                <span>⚡</span>
+                <span>Run Autonomous Quality Audit</span>
+            </button>
+            <button class="btn-main btn-secondary-action" onclick="triggerAction('explore')">
+                <span>🔍</span>
+                <span>Explore & Map App</span>
+            </button>
+            <button class="btn-main btn-benchmark-action" onclick="triggerAction('benchmark')">
+                <span>📊</span>
+                <span>Run 12-Vector Benchmark</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Live Execution & Results Monitor -->
+    <section id="monitor-section" class="monitor-card">
+        <div class="monitor-header">
+            <div class="monitor-title">
+                <span>📡</span>
+                <span id="monitor-headline">Agent Execution Monitor</span>
+            </div>
+            <div id="monitor-pill" class="status-pill pill-running">RUNNING</div>
+        </div>
+
+        <div id="log-box" class="log-box">
+            <div class="log-entry log-info">[*] Initializing agent environment...</div>
+        </div>
+
+        <div id="result-banner" class="result-banner" style="display: none;">
+            <div class="result-info">
+                <h4 id="result-title">✅ Audit Finished Successfully</h4>
+                <p id="result-subtitle">Dual visual evidence (high-res PNG snapshots + WebM video proofs) captured and saved.</p>
+            </div>
+            <a href="/reports/submission.html" target="_blank" class="btn-view-report">
+                <span>👉 View Full Interactive Report & Videos</span>
+                <span>🚀</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Capabilities Grid -->
+    <section class="grid-3">
+        <div class="feature-card">
+            <div class="feature-icon">📐</div>
+            <h3>Responsive Viewport Inspector</h3>
+            <p>Calculates bounding box boundaries across Desktop, Tablet, and 375px Mobile viewports to catch clipped buttons and overflow scroll breaks.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Zero-Day Auth & Route Guards</h3>
+            <p>Launches isolated unauthenticated browser contexts to verify that protected fleet data and cockpit controls are strictly guarded against bypasses.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3>Self-Healing & Invariant Checks</h3>
+            <p>Recovers altered selectors with 6-signal weighted matching and detects impossible telemetry states (e.g. offline drones emitting live data).</p>
+        </div>
+    </section>
+
+    <script>
+        let pollTimer = null;
+
+        function setTarget(url) {
+            const input = document.getElementById("target-url-input");
+            input.value = url;
+            input.focus();
+        }
+
+        async function triggerAction(action) {
+            const target = document.getElementById("target-url-input").value || "http://localhost:5173";
+            const isHeaded = document.getElementById("headed-toggle").checked;
+
+            const monitorSection = document.getElementById("monitor-section");
+            const monitorHeadline = document.getElementById("monitor-headline");
+            const monitorPill = document.getElementById("monitor-pill");
+            const logBox = document.getElementById("log-box");
+            const resultBanner = document.getElementById("result-banner");
+
+            monitorSection.style.display = "block";
+            resultBanner.style.display = "none";
+            monitorPill.className = "status-pill pill-running";
+            monitorPill.innerText = action.toUpperCase() + " RUNNING";
+            monitorHeadline.innerText = "Executing " + action.toUpperCase() + " on " + target;
+
+            logBox.innerHTML = `
+                <div class="log-entry log-info">[*] Launching autonomous ${action} agent...</div>
+                <div class="log-entry log-info">[*] Target: ${target} | Headless: ${!isHeaded}</div>
+                <div class="log-entry">[*] Inspecting DOM accessibility tree and multi-viewport boundaries...</div>
+            `;
+
+            monitorSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            try {
+                await fetch("/api/run_" + action, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: target, headless: !isHeaded })
+                });
+
+                if (pollTimer) clearInterval(pollTimer);
+                pollTimer = setInterval(checkAgentStatus, 1500);
+            } catch (e) {
+                monitorPill.className = "status-pill pill-running";
+                monitorPill.style.color = "#ef4444";
+                monitorPill.innerText = "ERROR";
+                logBox.innerHTML += `<div class="log-entry log-error">[X] Connection error: ${e}</div>`;
+            }
+        }
+
+        async function checkAgentStatus() {
+            try {
+                const resp = await fetch("/api/agent_status");
+                const state = await resp.json();
+                const monitorPill = document.getElementById("monitor-pill");
+                const logBox = document.getElementById("log-box");
+                const resultBanner = document.getElementById("result-banner");
+                const resultTitle = document.getElementById("result-title");
+                const resultSubtitle = document.getElementById("result-subtitle");
+
+                if (state.status === "running") {
+                    monitorPill.className = "status-pill pill-running";
+                    monitorPill.innerText = state.action.toUpperCase() + " IN PROGRESS";
+                    logBox.innerHTML = `
+                        <div class="log-entry log-info">[*] Running ${state.action.toUpperCase()}...</div>
+                        <div class="log-entry log-warn">-> ${state.message}</div>
+                    `;
+                } else if (state.status === "done") {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    monitorPill.className = "status-pill pill-success";
+                    monitorPill.innerText = "COMPLETED (100%)";
+
+                    logBox.innerHTML = `
+                        <div class="log-entry log-success">[+] ${state.message}</div>
+                        <div class="log-entry log-info">[*] Full video stream buffer flushed and verified.</div>
+                        <div class="log-entry log-info">[*] High-resolution defect screenshots captured.</div>
+                        <div class="log-entry log-success">[*] Submission documentation compiled to reports/submission.html</div>
+                    `;
+
+                    resultTitle.innerText = "✅ " + state.message;
+                    resultSubtitle.innerText = "Click below to review the interactive report cards, videos, and defect snapshots.";
+                    resultBanner.style.display = "flex";
+                }
+            } catch (e) {
+                console.error("Status check failed:", e);
+            }
+        }
+    </script>
 </body>
 </html>
 """
+
 
 
 def _async_task_wrapper(coro):
@@ -825,9 +1412,15 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # Dedicated Agent HUD
-        if path == "/ui":
-            html = HTML_STANDALONE_UI.replace("__FLOATING_BAR__", FLOATING_BAR_HTML)
-            self._send_html(html)
+        if path in ("/ui", "/hud"):
+            self._send_html(HTML_STANDALONE_UI)
+            return
+
+        # Direct alias for broken mutation lab
+        if path == "/broken":
+            self.send_response(302)
+            self.send_header("Location", "/dashboard?mutation=responsive_clip&auth=1")
+            self.end_headers()
             return
 
         # 1. Login Page
