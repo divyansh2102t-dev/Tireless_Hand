@@ -53,6 +53,11 @@ class SecurityAuditor:
         try:
             for path in list(test_paths)[:6]:
                 target_url = urljoin(origin, path)
+                if parsed_base.path == path and parsed_base.query:
+                    target_url = f"{target_url}?{parsed_base.query}"
+                elif not parsed_base.path and parsed_base.query:
+                    target_url = f"{target_url}?{parsed_base.query}"
+
                 try:
                     response = await page.goto(target_url, wait_until="domcontentloaded", timeout=3000)
                     if not response:
@@ -63,8 +68,9 @@ class SecurityAuditor:
                     status_code = response.status
 
                     # Check if the page stayed on the protected route and returned 200 without auth
+                    path_lower = urlparse(current_url).path.lower()
                     is_login_redirect = any(
-                        keyword in current_url.lower()
+                        keyword in path_lower
                         for keyword in ["login", "signin", "auth", "unauthorized", "access-denied"]
                     )
 

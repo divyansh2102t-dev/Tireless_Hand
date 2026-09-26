@@ -35,10 +35,10 @@ class ResponsiveAuditor:
                 await page.goto(url, wait_until="domcontentloaded")
                 await page.wait_for_timeout(300)
 
-                # Check 1: Horizontal viewport overflow
+                # Check 1: Horizontal viewport overflow (with 5px subpixel tolerance)
                 has_overflow = await page.evaluate(
                     """() => {
-                        return document.documentElement.scrollWidth > window.innerWidth;
+                        return document.documentElement.scrollWidth > (window.innerWidth + 5);
                     }"""
                 )
                 if has_overflow:
@@ -69,8 +69,21 @@ class ResponsiveAuditor:
                         const rect = el.getBoundingClientRect();
                         const text = (el.innerText || el.getAttribute('aria-label') || el.value || '').trim();
                         
-                        // Check if pushed off-screen to the right
-                        if (rect.left >= vpW || rect.right > vpW + 10) {
+                        // Check if parent is an intentional horizontal scroll container (e.g. data table or carousel)
+                        let inScrollable = false;
+                        let p = el.parentElement;
+                        while (p && p !== document.body && p !== document.documentElement) {
+                            const cs = window.getComputedStyle(p);
+                            const ox = (cs.overflowX || cs.overflow || '').toLowerCase();
+                            if (ox.includes('auto') || ox.includes('scroll') || p.classList.contains('table-container') || p.tagName === 'TABLE') {
+                                inScrollable = true;
+                                break;
+                            }
+                            p = p.parentElement;
+                        }
+
+                        // Check if pushed off-screen to the right (and not inside a valid scrollable component)
+                        if (!inScrollable && (rect.left >= vpW || rect.right > vpW + 10)) {
                             results.push({
                                 type: 'off_screen_horizontal',
                                 text: text || el.tagName,

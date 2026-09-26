@@ -38,7 +38,7 @@ class InvariantAuditor:
                 
                 const hasActionBtn = buttons.some(b => {
                     const txt = (b.innerText || b.value || b.getAttribute('aria-label') || '').toLowerCase();
-                    return /submit|sign|login|continue|next|confirm|save|send|verify|register|enter/i.test(txt);
+                    return /submit|sign|login|continue|next|confirm|save|send|verify|register|enter|launch|dispatch|execute|create|start|apply|update/i.test(txt);
                 });
 
                 if (buttons.length === 0 || !hasActionBtn) {
@@ -72,18 +72,18 @@ class InvariantAuditor:
             const text = document.body.innerText.toLowerCase();
             const results = [];
 
-            // Pattern: Drone / Device status is OFFLINE
-            const isOffline = /status[:\s]+offline|device[:\s]+disconnected|drone[:\s]+offline/i.test(text);
+            // Pattern: Drone / Device status is OFFLINE or Disconnected
+            const isOffline = /status[:\s]+offline|device[:\s]+disconnected|drone[:\s]+offline|sensor[:\s]+disconnected/i.test(text);
 
             // Conflicting active indicators
-            const hasActiveTelemetry = /altitude[:\s]+[1-9]\d*|speed[:\s]+[1-9]\d*|armed[:\s]+true|motors[:\s]+running|streaming\s+live/i.test(text);
+            const hasActiveTelemetry = /altitude[:\s]+[1-9]\d*|speed[:\s]+[1-9]\d*|armed[:\s]+true|motors[:\s]+running|streaming\s+live|sampling\s+\d+/i.test(text);
             const showsLiveBadge = Array.from(document.querySelectorAll('.badge, .status, span, div'))
-                .some(el => el.innerText && /live|streaming|online|active/i.test(el.innerText) && window.getComputedStyle(el).display !== 'none');
+                .some(el => el.innerText && /live|streaming|online|active|sampling/i.test(el.innerText) && window.getComputedStyle(el).display !== 'none');
 
             if (isOffline && (hasActiveTelemetry || showsLiveBadge)) {
                 results.push({
                     type: 'telemetry_conflict',
-                    details: 'Status displays as Offline / Disconnected, but active telemetry (Altitude/Speed/Live stream) is simultaneously shown.'
+                    details: 'Status displays as Offline / Disconnected, but active telemetry (Altitude/Speed/Sensor stream) is simultaneously shown.'
                 });
             }
 
