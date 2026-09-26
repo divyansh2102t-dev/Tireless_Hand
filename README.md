@@ -5,71 +5,9 @@
 
 ---
 
-## 🏆 Hackathon Evaluation Summary
+## 🔄 End-to-End System Data Flow Architecture
 
-Tireless Hand achieves a **100% Precision and 100% Recall (1.000 F1-Score)** across both Hackathon evaluation tiers:
-
-* **Level 1 (Static UI, Invariants & Security):** 12/12 test vectors passed ([Level 1 Submission Word Doc](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level1_Submission.docx)).
-* **Level 2 (Performance & Complex Domain Reliability):** 8/8 performance vectors passed ([Level 2 Submission Word Doc](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level2_Submission.docx)).
-
----
-
-## 🚀 One-Command Instant Launch (Zero Setup)
-
-Launch the entire platform (Mock FlytBase Control Server, Agent Backend, Mutation Labs, and Interactive Browser HUD) with a **single command**:
-
-```bash
-# 1. Install dependencies & Playwright browser
-pip install -e .
-playwright install chromium
-
-# 2. Start all components & open UI
-python run.py
-```
-*(Or run the CLI command: `tireless start`)*
-
-This automatically launches the background servers and opens the **Autonomous Agent Console** at **`http://localhost:8000/ui`**.
-
----
-
-## 🎛️ Interactive Autonomous Agent Console
-
-Tireless Hand includes a built-in interactive console at **`http://localhost:8000/ui`**:
-
-* **Target URL Input**: Audit any target URL (e.g. FlytBase Cockpit at `http://localhost:5173`, Control Panel at `http://localhost:4000/dashboard`, or `http://localhost:8000/broken`).
-* **Quick Presets**: Single-click buttons for FlytBase Cockpit, Control Panel, Mutation Labs, and Security Route Guards.
-* **⚡ Run Autonomous Quality Audit**: Triggers complete Level 1 multi-viewport defect analysis (1280px / 768px / 375px), auth guards, and form invariant checks.
-* **⏱️ Performance & Domain Audit**: Measures LCP, CLS, Main-Thread Long Tasks ($>50\text{ms}$), 3D Map FPS, and JS Heap memory growth.
-* **🔍 Explore & Map App**: Crawls pages, detects interactive controls, and builds persistent graph memory.
-* **📊 Run Evaluation Benchmarks**: Executes the Level 1 and Level 2 benchmark evaluation suites with live rich terminal output.
-* **📄 Submission Reports**: Instant links to generated HTML reports and formatted Word submission documents.
-
----
-
-## 🛠️ Complete Tech Stack Breakdown
-
-Tireless Hand is architected with a high-performance, modular stack designed for zero cloud reliance, instantaneous local execution, and rich multi-format reporting:
-
-| Layer / Category | Technology | Purpose & Responsibility |
-| :--- | :--- | :--- |
-| **Core Runtime & Engine** | **Python 3.11+ / AsyncIO** | High-concurrency async test scheduling, invariant evaluation, and task orchestration. |
-| **Browser & Engine Automation** | **Playwright (Chromium)** | High-fidelity headless & headed browser automation with deep Chromium CDP hooks. |
-| **Deep Performance Profiling** | **Chrome DevTools Protocol (CDP)** | Direct sampling of JS Heap memory, Main-Thread Long Tasks ($>50\text{ms}$), LCP, and CLS. |
-| **Target Drone Platforms** | **React 18 / Vite / CesiumJS / WebGL** | Real-world FlytBase 3D globe cockpit, telemetry dashboards, and live mission planners. |
-| **Interactive HUD & Frontend** | **HTML5 / CSS3 Glassmorphism / Vanilla JS** | Zero-dependency live operator console, responsive controls, and audit dispatchers. |
-| **Telemetry & Visual Analytics** | **Chart.js / Canvas 2D API** | Live 60 FPS oscilloscope signal waveform, radar quality charts, and comparative performance bar graphs. |
-| **Web Server & Backend API** | **FastAPI / Starlette / Uvicorn** | High-throughput REST API serving telemetry, audit workers, and live web endpoints (`:8000`). |
-| **Static & Dynamic Analysis** | **Python `ast` / Accessibility Tree** | Compact token-efficient structural DOM traversal, form invariant tracking, and route security checking. |
-| **AI Voice & Speech Synthesis** | **`edge-tts` (Neural TTS)** | High-fidelity synthesized neural AI narration (`en-US-ChristopherNeural`) for automated video reports. |
-| **Video & Media Pipeline** | **`ffmpeg` / `imageio_ffmpeg`** | High-performance audio/video multiplexing, frame capture, and dual WebM / MP4 video generation. |
-| **Data Viz & Chart Generation** | **Matplotlib / NumPy** | Programmatic dark-themed rendering of performance benchmark comparisons and quality radar charts. |
-| **Document & Report Packaging** | **`python-docx` / HTML5 OpenXML** | Automated compilation of standalone evaluation Word documents with embedded binary chart figures. |
-
----
-
-## 🔄 Complete Flow of Data Diagram
-
-The following diagram illustrates the end-to-end data pipeline from target drone cockpit ingestion to autonomous invariant analysis and multi-format evidence generation:
+![Tireless Hand System Data Flow](reports/images/system_data_flow.png)
 
 ```mermaid
 flowchart TD
@@ -141,6 +79,68 @@ flowchart TD
     REASONER -->|Captures Frame Stream + Neural Audio| VIDEO
     REASONER -->|Saves Zero-Artifact Snapshots| PROOF_PNG
 ```
+
+---
+
+## 🏆 Hackathon Evaluation Summary
+
+Tireless Hand achieves a **100% Precision and 100% Recall (1.000 F1-Score)** across both Hackathon evaluation tiers:
+
+* **Level 1 (Static UI, Invariants & Security):** 12/12 test vectors passed ([Level 1 Submission Word Doc](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level1_Submission.docx)).
+* **Level 2 (Performance & Complex Domain Reliability):** 8/8 performance vectors passed ([Level 2 Submission Word Doc](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level2_Submission.docx)).
+
+---
+
+## 🚀 One-Command Instant Launch (Zero Setup)
+
+Launch the entire platform (Mock FlytBase Control Server, Agent Backend, Mutation Labs, and Interactive Browser HUD) with a **single command**:
+
+```bash
+# 1. Install dependencies & Playwright browser
+pip install -e .
+playwright install chromium
+
+# 2. Start all components & open UI
+python run.py
+```
+*(Or run the CLI command: `tireless start`)*
+
+This automatically launches the background servers and opens the **Autonomous Agent Console** at **`http://localhost:8000/ui`**.
+
+---
+
+## 🎛️ Interactive Autonomous Agent Console
+
+Tireless Hand includes a built-in interactive console at **`http://localhost:8000/ui`**:
+
+* **Target URL Input**: Audit any target URL (e.g. FlytBase Cockpit at `http://localhost:5173`, Control Panel at `http://localhost:4000/dashboard`, or `http://localhost:8000/broken`).
+* **Quick Presets**: Single-click buttons for FlytBase Cockpit, Control Panel, Mutation Labs, and Security Route Guards.
+* **⚡ Run Autonomous Quality Audit**: Triggers complete Level 1 multi-viewport defect analysis (1280px / 768px / 375px), auth guards, and form invariant checks.
+* **⏱️ Performance & Domain Audit**: Measures LCP, CLS, Main-Thread Long Tasks ($>50\text{ms}$), 3D Map FPS, and JS Heap memory growth.
+* **🔍 Explore & Map App**: Crawls pages, detects interactive controls, and builds persistent graph memory.
+* **📊 Run Evaluation Benchmarks**: Executes the Level 1 and Level 2 benchmark evaluation suites with live rich terminal output.
+* **📄 Submission Reports**: Instant links to generated HTML reports and formatted Word submission documents.
+
+---
+
+## 🛠️ Complete Tech Stack Breakdown
+
+Tireless Hand is architected with a high-performance, modular stack designed for zero cloud reliance, instantaneous local execution, and rich multi-format reporting:
+
+| Layer / Category | Technology | Purpose & Responsibility |
+| :--- | :--- | :--- |
+| **Core Runtime & Engine** | **Python 3.11+ / AsyncIO** | High-concurrency async test scheduling, invariant evaluation, and task orchestration. |
+| **Browser & Engine Automation** | **Playwright (Chromium)** | High-fidelity headless & headed browser automation with deep Chromium CDP hooks. |
+| **Deep Performance Profiling** | **Chrome DevTools Protocol (CDP)** | Direct sampling of JS Heap memory, Main-Thread Long Tasks ($>50\text{ms}$), LCP, and CLS. |
+| **Target Drone Platforms** | **React 18 / Vite / CesiumJS / WebGL** | Real-world FlytBase 3D globe cockpit, telemetry dashboards, and live mission planners. |
+| **Interactive HUD & Frontend** | **HTML5 / CSS3 Glassmorphism / Vanilla JS** | Zero-dependency live operator console, responsive controls, and audit dispatchers. |
+| **Telemetry & Visual Analytics** | **Chart.js / Canvas 2D API** | Live 60 FPS oscilloscope signal waveform, radar quality charts, and comparative performance bar graphs. |
+| **Web Server & Backend API** | **FastAPI / Starlette / Uvicorn** | High-throughput REST API serving telemetry, audit workers, and live web endpoints (`:8000`). |
+| **Static & Dynamic Analysis** | **Python `ast` / Accessibility Tree** | Compact token-efficient structural DOM traversal, form invariant tracking, and route security checking. |
+| **AI Voice & Speech Synthesis** | **`edge-tts` (Neural TTS)** | High-fidelity synthesized neural AI narration (`en-US-ChristopherNeural`) for automated video reports. |
+| **Video & Media Pipeline** | **`ffmpeg` / `imageio_ffmpeg`** | High-performance audio/video multiplexing, frame capture, and dual WebM / MP4 video generation. |
+| **Data Viz & Chart Generation** | **Matplotlib / NumPy** | Programmatic dark-themed rendering of performance benchmark comparisons and quality radar charts. |
+| **Document & Report Packaging** | **`python-docx` / HTML5 OpenXML** | Automated compilation of standalone evaluation Word documents with embedded binary chart figures. |
 
 ---
 
