@@ -17,7 +17,7 @@ class ResponsiveIssue:
     viewport: str
     width: int
     height: int
-    issue_type: str  # "off_screen", "horizontal_overflow", "hidden_cta", "clipped_text"
+    issue_type: str  # "off_screen_horizontal", "horizontal_overflow", "clipped_text"
     element_description: str
     details: str
     severity: str  # "HIGH", "MEDIUM", "LOW"
@@ -35,10 +35,10 @@ class ResponsiveAuditor:
                 await page.goto(url, wait_until="domcontentloaded")
                 await page.wait_for_timeout(700)
 
-                # Check 1: Horizontal viewport overflow (with 5px subpixel tolerance)
+                # Check 1: Horizontal viewport overflow (with 10px tolerance)
                 has_overflow = await page.evaluate(
                     """() => {
-                        return document.documentElement.scrollWidth > (window.innerWidth + 5);
+                        return document.documentElement.scrollWidth > (window.innerWidth + 10);
                     }"""
                 )
                 if has_overflow:
@@ -58,44 +58,65 @@ class ResponsiveAuditor:
                 script_check_elements = """
                 () => {
                     const results = [];
-                    const interactive = Array.from(document.querySelectorAll('button, a.btn, input[type="submit"], [role="button"]'));
+                    const interactive = Array.from(document.querySelectorAll('button, a.btn, a[role="button"], input[type="submit"], [role="button"]'));
                     const vpW = window.innerWidth;
                     const vpH = window.innerHeight;
 
                     for (const el of interactive) {
+                        // Ignore injected HUD widgets or bottom floating bars
+                        if (el.closest('#tireless-floating-bar-container, #tireless-floating-bar, [id^="tireless-floating"], [id^="tfb-"], #tfb-hud, .tfb-floating-panel, [data-agent-hud]')) continue;
+
                         const style = window.getComputedStyle(el);
-                        if (style.display === 'none' || style.visibility === 'hidden') continue;
+                        
+                        // Strict filter: Ignore hidden, off-canvas drawers, templates, sr-only or collapsed utility tags
+                        const isHidden = (
+                            style.display === 'none' ||
+                            style.visibility === 'hidden' ||
+                            style.opacity === '0' ||
+                            el.hasAttribute('hidden') ||
+                            el.getAttribute('aria-hidden') === 'true' ||
+                            el.getAttribute('tabindex') === '-1' ||
+                            el.classList.contains('sr-only') ||
+                            el.classList.contains('visually-hidden') ||
+                            el.offsetParent === null
+                        );
+                        if (isHidden) continue;
 
                         const rect = el.getBoundingClientRect();
-                        const text = (el.innerText || el.getAttribute('aria-label') || el.value || '').trim();
+                        const text = (el.innerText || el.getAttribute('aria-label') || el.value || el.title || '').trim();
                         
-                        // Check if parent is an intentional horizontal scroll container (e.g. data table or carousel)
+                        // Must be a meaningful interactive element with text or icons
+                        if (!text && !el.querySelector('svg, img')) continue;
+
+                        // Check if parent is an intentional horizontal scroll container (e.g. data table, code snippet, carousel)
                         let inScrollable = false;
                         let p = el.parentElement;
                         while (p && p !== document.body && p !== document.documentElement) {
                             const cs = window.getComputedStyle(p);
                             const ox = (cs.overflowX || cs.overflow || '').toLowerCase();
-                            if (ox.includes('auto') || ox.includes('scroll') || p.classList.contains('table-container') || p.tagName === 'TABLE') {
+                            const tag = p.tagName.toUpperCase();
+                            if (
+                                ox.includes('auto') || 
+                                ox.includes('scroll') || 
+                                p.classList.contains('table-container') || 
+                                tag === 'TABLE' || 
+                                tag === 'TBODY' || 
+                                tag === 'TR' || 
+                                tag === 'TD' || 
+                                tag === 'PRE'
+                            ) {
                                 inScrollable = true;
                                 break;
                             }
                             p = p.parentElement;
                         }
 
-                        // Check if pushed off-screen to the right (and not inside a valid scrollable component)
-                        if (!inScrollable && (rect.left >= vpW || rect.right > vpW + 10)) {
+                        // Check if actively pushed off-screen to the right
+                        if (!inScrollable && (rect.left >= vpW || rect.right > vpW + 15)) {
                             results.push({
                                 type: 'off_screen_horizontal',
                                 text: text || el.tagName,
-                                details: `Element positioned at x=${Math.round(rect.left)}px, beyond screen width (${vpW}px)`
-                            });
-                        }
-                        // Check if element has zero clickable area
-                        else if (rect.width <= 0 || rect.height <= 0) {
-                            results.push({
-                                type: 'zero_dimension',
-                                text: text || el.tagName,
-                                details: 'Interactive element collapsed to 0 width/height'
+                                details: `Action element pushed off-screen at x=${Math.round(rect.left)}px (viewport width: ${vpW}px)`
                             });
                         }
                     }

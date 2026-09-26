@@ -24,14 +24,16 @@ class InvariantAuditor:
         # Check 1: Orphan Form detection (Inputs present without any actionable submit button)
         orphan_form_script = r"""
         () => {
-            const forms = Array.from(document.querySelectorAll('form, .form, [role="form"]'));
             const results = [];
             
-            // Also check root if no explicit form tag exists
-            const inputElements = Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea, select'));
+            // Check form elements, ignoring injected agent HUD controls or search bars in header
+            const inputElements = Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea, select'))
+                .filter(i => !i.closest('#tireless-floating-bar-container, #tireless-floating-bar, [id^="tireless-floating"], [id^="tfb-"], #tfb-hud, .tfb-floating-panel, [data-agent-hud], header, nav'));
+
             if (inputElements.length >= 2) {
                 const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], [role="button"]'))
                     .filter(b => {
+                        if (b.closest('#tireless-floating-bar-container, #tireless-floating-bar, [id^="tireless-floating"], [id^="tfb-"], #tfb-hud, .tfb-floating-panel, [data-agent-hud], header, nav')) return false;
                         const style = window.getComputedStyle(b);
                         return style.display !== 'none' && style.visibility !== 'hidden' && !b.disabled;
                     });
@@ -69,8 +71,14 @@ class InvariantAuditor:
         # Check 2: Semantic Telemetry & Status Conflict (e.g. Offline status with active flight data)
         conflict_script = r"""
         () => {
-            const text = document.body.innerText.toLowerCase();
             const results = [];
+            
+            // Clone body or evaluate content ignoring floating HUD
+            const hud = document.getElementById('tireless-floating-bar-container');
+            let text = document.body.innerText.toLowerCase();
+            if (hud && hud.innerText) {
+                text = text.replace(hud.innerText.toLowerCase(), '');
+            }
 
             // Pattern: Drone / Device status is OFFLINE or Disconnected
             const isOffline = /status[:\s]+offline|device[:\s]+disconnected|drone[:\s]+offline|sensor[:\s]+disconnected/i.test(text);
@@ -78,7 +86,10 @@ class InvariantAuditor:
             // Conflicting active indicators
             const hasActiveTelemetry = /altitude[:\s]+[1-9]\d*|speed[:\s]+[1-9]\d*|armed[:\s]+true|motors[:\s]+running|streaming\s+live|sampling\s+\d+/i.test(text);
             const showsLiveBadge = Array.from(document.querySelectorAll('.badge, .status, span, div'))
-                .some(el => el.innerText && /live|streaming|online|active|sampling/i.test(el.innerText) && window.getComputedStyle(el).display !== 'none');
+                .some(el => {
+                    if (el.closest('#tireless-floating-bar-container, #tireless-floating-bar, [id^="tireless-floating"], [id^="tfb-"], #tfb-hud, .tfb-floating-panel, [data-agent-hud]')) return false;
+                    return el.innerText && /live|streaming|online|active|sampling/i.test(el.innerText) && window.getComputedStyle(el).display !== 'none';
+                });
 
             if (isOffline && (hasActiveTelemetry || showsLiveBadge)) {
                 results.push({
@@ -98,41 +109,10 @@ class InvariantAuditor:
                         issue_type="telemetry_conflict",
                         description="Contradictory state: Device marked Offline while active telemetry is displayed",
                         details=c["details"],
-                        severity="HIGH",
+                        severity="CRITICAL",
                     )
                 )
         except Exception as e:
-            logger.debug(f"Telemetry check skipped: {e}")
-
-        # Check 3: Visible error alerts or crash banners
-        error_script = """
-        () => {
-            const results = [];
-            const errorElements = Array.from(document.querySelectorAll('.error, .alert-danger, [role="alert"], .crash-banner'));
-            for (const el of errorElements) {
-                const style = window.getComputedStyle(el);
-                if (style.display !== 'none' && style.visibility !== 'hidden') {
-                    const txt = el.innerText.trim();
-                    if (txt.length > 5) {
-                        results.push(txt);
-                    }
-                }
-            }
-            return results;
-        }
-        """
-        try:
-            error_banners = await page.evaluate(error_script)
-            for err in error_banners:
-                issues.append(
-                    InvariantIssue(
-                        issue_type="error_state",
-                        description="Error banner or unhandled exception alert displayed to user",
-                        details=f"Visible error message on screen: '{err[:100]}'",
-                        severity="HIGH",
-                    )
-                )
-        except Exception as e:
-            logger.debug(f"Error banner check skipped: {e}")
+            logger.debug(f"Conflict check skipped: {e}")
 
         return issues
