@@ -33,7 +33,7 @@ class ResponsiveAuditor:
             try:
                 await page.set_viewport_size({"width": vp["width"], "height": vp["height"]})
                 await page.goto(url, wait_until="domcontentloaded")
-                await page.wait_for_timeout(300)
+                await page.wait_for_timeout(700)
 
                 # Check 1: Horizontal viewport overflow (with 5px subpixel tolerance)
                 has_overflow = await page.evaluate(

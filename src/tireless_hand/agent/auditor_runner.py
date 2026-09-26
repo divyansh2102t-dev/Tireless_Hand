@@ -51,7 +51,7 @@ class FullAuditRunner:
 
         self.browser_config = BrowserConfig(
             headless=headless,
-            slow_mo=50,
+            slow_mo=350 if not headless else 50,
             record_video=True,
             video_dir=self.video_dir,
             screenshot_dir=self.screenshot_dir,
