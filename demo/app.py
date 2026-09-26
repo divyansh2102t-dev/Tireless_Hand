@@ -102,9 +102,13 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
 
         # Route 2: Protected Fleet Dashboard
         elif path == "/dashboard":
-            # Check auth bypass mutation
             auth_cookie = self.headers.get("Cookie", "")
-            if "auth_token=" not in auth_cookie and mutation != "auth_bypass":
+            is_authorized = (
+                "auth_token=" in auth_cookie
+                or mutation in ("auth_bypass", "telemetry_conflict", "responsive_clip")
+                or query.get("auth") == ["1"]
+            )
+            if not is_authorized:
                 # Normal mode: redirect to login
                 self.send_response(302)
                 self.send_header("Location", "/login")
@@ -136,16 +140,17 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
             self._send_html(html)
             return
 
-        elif path == "/login_submit":
-            # Issue auth cookie and redirect to dashboard
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+        if path == "/login_submit":
             self.send_response(302)
             self.send_header("Set-Cookie", "auth_token=valid_pilot_session; Path=/")
             self.send_header("Location", "/dashboard")
             self.end_headers()
-            return
-
         else:
-            self.send_error(404, "Page Not Found")
+            self.send_response(200)
+            self.end_headers()
 
     def _send_html(self, html: str):
         self.send_response(200)
@@ -154,15 +159,14 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(html.encode("utf-8"))
 
 
+class ThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+
 def start_server(port: int = PORT):
-    with socketserver.TCPServer(("", port), DemoServerHandler) as httpd:
+    with ThreadingServer(("", port), DemoServerHandler) as httpd:
         print(f"[*] FlytBase Mission Control Demo Server running at http://localhost:{port}")
-        print("Available mutation scenarios:")
-        print(f"  - Baseline: http://localhost:{port}/login")
-        print(f"  - Mutation 1 (Orphan Form): http://localhost:{port}/login?mutation=orphan_form")
-        print(f"  - Mutation 2 (Telemetry Conflict): http://localhost:{port}/dashboard?mutation=telemetry_conflict&auth=1")
-        print(f"  - Mutation 3 (Responsive Clipping): http://localhost:{port}/dashboard?mutation=responsive_clip")
-        print(f"  - Mutation 4 (Auth Bypass): http://localhost:{port}/dashboard?mutation=auth_bypass")
         httpd.serve_forever()
 
 

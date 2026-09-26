@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
+from pathlib import Path
 
 import aiosqlite
 
@@ -66,8 +67,10 @@ class HealingRecord:
 class MemoryStore:
     def __init__(self, db_path: str = "memory.db"):
         self.db_path = db_path
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
 
     async def init_db(self) -> None:
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS pages (

@@ -50,19 +50,33 @@ class ElementFingerprinter:
         "css_classes": 0.30
     }
 
-    def create_fingerprint(self, element_info: dict[str, Any]) -> Fingerprint:
+    def create_fingerprint(self, element_info: Any) -> Fingerprint:
+        if isinstance(element_info, dict):
+            return Fingerprint(
+                element_id=str(element_info.get("element_id") or element_info.get("ref_id", "")),
+                tag=element_info.get("tag", ""),
+                role=element_info.get("role"),
+                text_content=element_info.get("text_content") or element_info.get("text"),
+                aria_label=element_info.get("aria_label"),
+                id_attr=element_info.get("id_attr"),
+                name_attr=element_info.get("name_attr") or element_info.get("name"),
+                placeholder=element_info.get("placeholder"),
+                css_classes=element_info.get("css_classes", []),
+                position=element_info.get("position"),
+                parent_context=element_info.get("parent_context"),
+            )
         return Fingerprint(
-            element_id=element_info.get("element_id", ""),
-            tag=element_info.get("tag", ""),
-            role=element_info.get("role"),
-            text_content=element_info.get("text_content"),
-            aria_label=element_info.get("aria_label"),
-            id_attr=element_info.get("id_attr"),
-            name_attr=element_info.get("name_attr"),
-            placeholder=element_info.get("placeholder"),
-            css_classes=element_info.get("css_classes", []),
-            position=element_info.get("position"),
-            parent_context=element_info.get("parent_context")
+            element_id=str(getattr(element_info, "element_id", "") or getattr(element_info, "ref_id", "")),
+            tag=getattr(element_info, "tag", ""),
+            role=getattr(element_info, "role", None),
+            text_content=getattr(element_info, "text_content", None) or getattr(element_info, "text", None),
+            aria_label=getattr(element_info, "aria_label", None),
+            id_attr=getattr(element_info, "id_attr", None),
+            name_attr=getattr(element_info, "name_attr", None) or getattr(element_info, "name", None),
+            placeholder=getattr(element_info, "placeholder", None),
+            css_classes=getattr(element_info, "css_classes", []),
+            position=getattr(element_info, "position", None),
+            parent_context=getattr(element_info, "parent_context", None),
         )
 
     def _text_similarity(self, s1: Optional[str], s2: Optional[str]) -> float:

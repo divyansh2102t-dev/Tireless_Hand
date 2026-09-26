@@ -233,7 +233,7 @@ def status(db: str):
         pages = await memory.get_known_pages()
         coverage = await graph.get_exploration_coverage()
 
-        table = Table(title="🧠 Memory Status")
+        table = Table(title="[*] Memory Status")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
         table.add_row("Known Pages", str(coverage.get("total_pages", 0)))
@@ -243,7 +243,7 @@ def status(db: str):
         console.print(table)
 
         if pages:
-            page_table = Table(title="📄 Known Pages")
+            page_table = Table(title="[*] Known Pages")
             page_table.add_column("URL", style="blue")
             page_table.add_column("Title", style="white")
             page_table.add_column("Visits", style="green")
@@ -255,16 +255,26 @@ def status(db: str):
 
 
 @cli.command()
-@click.argument("url")
+@click.argument("url", default="http://localhost:8000")
+@click.option("--suite", is_flag=True, help="Run complete Level-1 mutation suite")
 @click.option("--headless/--no-headless", default=True, help="Run browser headless")
 @click.option("--output-dir", default="./reports", help="Output directory for reports and videos")
-def audit(url: str, headless: bool, output_dir: str):
+def audit(url: str, suite: bool, headless: bool, output_dir: str):
     """Run full Level-1 quality audit with video recording and generate submission document."""
     async def _run():
         from .agent.auditor_runner import FullAuditRunner
 
         runner = FullAuditRunner(base_url=url, headless=headless, output_dir=output_dir)
-        await runner.run_full_audit()
+        if suite or url in ("all", "suite", "demo"):
+            suite_urls = [
+                "http://localhost:8000/login?mutation=orphan_form",
+                "http://localhost:8000/dashboard?mutation=telemetry_conflict&auth=1",
+                "http://localhost:8000/dashboard?mutation=responsive_clip",
+                "http://localhost:8000/dashboard?mutation=auth_bypass",
+            ]
+            await runner.run_suite_audit(suite_urls)
+        else:
+            await runner.run_full_audit()
 
     asyncio.run(_run())
 

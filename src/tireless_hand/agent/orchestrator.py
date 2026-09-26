@@ -112,7 +112,7 @@ class TestOrchestrator:
         # Memory
         self.memory = MemoryStore(db_path=memory_db_path)
         self.app_graph = AppGraph(self.memory)
-        self.baseline_mgr = BaselineManager(baseline_dir=baseline_dir)
+        self.baseline_mgr = BaselineManager(store=self.memory)
 
         # AI reasoning
         self.llm = llm_client or TieredLLMClient()
@@ -127,7 +127,6 @@ class TestOrchestrator:
         await self.browser.start()
         self.resolver = SelfHealingResolver(
             matcher=self.matcher,
-            llm_client=self.llm,
         )
 
     async def _cleanup(self):
@@ -149,126 +148,116 @@ class TestOrchestrator:
             visited: set[str] = set()
             to_visit: list[tuple[str, int]] = [(url, 0)]
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,
-            ) as progress:
-                task = progress.add_task("Exploring...", total=None)
+            while to_visit:
+                current_url, current_depth = to_visit.pop(0)
 
-                while to_visit:
-                    current_url, current_depth = to_visit.pop(0)
+                if current_url in visited or current_depth > depth:
+                    continue
 
-                    if current_url in visited or current_depth > depth:
-                        continue
+                visited.add(current_url)
+                console.print(f"[*] Exploring: [cyan]{current_url}[/cyan] (depth {current_depth}/{depth})")
 
-                    visited.add(current_url)
-                    progress.update(task, description=f"Exploring: {current_url}")
+                page = self.browser.get_page()
+                if not page:
+                    continue
 
-                    page = self.browser.get_page()
-                    if not page:
-                        continue
+                try:
+                    await self.browser.goto(current_url)
+                except Exception as e:
+                    logger.warning(f"Failed to navigate to {current_url}: {e}")
+                    continue
 
+                compact_dom = await self.dom_parser.get_compact_dom(page)
+                elements = await self.dom_parser.get_interactable_elements(page)
+                title = await self.browser.current_title()
+                dom_hash = hashlib.md5(compact_dom.encode()).hexdigest()
+
+                is_known = await self.app_graph.is_known_page(current_url)
+
+                # Save to memory
+                await self.app_graph.record_page(
+                    url=current_url,
+                    title=title,
+                    elements=[],
+                    dom_hash=dom_hash,
+                )
+                result.pages_discovered += 1
+                result.elements_found += len(elements)
+
+                # Save baseline
+                screenshot_path = f"./memory/baselines/{dom_hash}.png"
+                try:
+                    await self.browser.screenshot(screenshot_path)
+                except Exception:
+                    screenshot_path = ""
+
+                # Print page info
+                console.print(
+                    f"  [green][+][/green] {title} ({current_url}) "
+                    f"- {len(elements)} elements"
+                    f"{' [dim](known)[/dim]' if is_known else ' [cyan](new)[/cyan]'}"
+                )
+
+                # Fingerprint all elements for memory
+                for el in elements:
+                    fp = self.fingerprinter.create_fingerprint(el)
+
+                # If not too deep, ask LLM which elements to explore next
+                if current_depth < depth and not is_known:
                     try:
-                        await self.browser.goto(current_url)
-                    except Exception as e:
-                        logger.warning(f"Failed to navigate to {current_url}: {e}")
-                        continue
+                        response = await self.llm.query_fast(
+                            f"Page DOM:\n{compact_dom}",
+                            system=SYSTEM_EXPLORER,
+                        )
+                        result.llm_calls_made += 1
 
-                    compact_dom = await self.dom_parser.get_compact_dom(page)
-                    elements = await self.dom_parser.get_interactable_elements(page)
-                    title = await self.browser.current_title()
-                    dom_hash = hashlib.md5(compact_dom.encode()).hexdigest()
-
-                    is_known = await self.app_graph.is_known_page(current_url)
-
-                    # Save to memory
-                    await self.app_graph.record_page(
-                        url=current_url,
-                        title=title,
-                        elements=[],  # element dicts
-                        dom_hash=dom_hash,
-                    )
-                    result.pages_discovered += 1
-                    result.elements_found += len(elements)
-
-                    # Save baseline
-                    screenshot_path = f"./memory/baselines/{dom_hash}.png"
-                    try:
-                        await self.browser.screenshot(screenshot_path)
-                    except Exception:
-                        screenshot_path = ""
-
-                    # Print page info
-                    console.print(
-                        f"  [green]✓[/green] {title} ({current_url}) "
-                        f"- {len(elements)} elements"
-                        f"{' [dim](known)[/dim]' if is_known else ' [cyan](new)[/cyan]'}"
-                    )
-
-                    # Fingerprint all elements for memory
-                    for el in elements:
-                        fp = self.fingerprinter.create_fingerprint(el)
-                        # Store fingerprint in memory for future self-healing
-
-                    # If not too deep, ask LLM which elements to explore next
-                    if current_depth < depth and not is_known:
+                        # Parse suggested actions
                         try:
-                            response = await self.llm.query_fast(
-                                f"Page DOM:\n{compact_dom}",
-                                system=SYSTEM_EXPLORER,
-                            )
-                            result.llm_calls_made += 1
+                            json_str = response.strip()
+                            if "```" in json_str:
+                                json_str = json_str.split("```")[1]
+                                if json_str.startswith("json"):
+                                    json_str = json_str[4:]
+                            suggestions = json.loads(json_str)
+                        except (json.JSONDecodeError, IndexError):
+                            suggestions = []
 
-                            # Parse suggested actions
-                            try:
-                                # Try to extract JSON from response
-                                json_str = response.strip()
-                                if "```" in json_str:
-                                    json_str = json_str.split("```")[1]
-                                    if json_str.startswith("json"):
-                                        json_str = json_str[4:]
-                                suggestions = json.loads(json_str)
-                            except (json.JSONDecodeError, IndexError):
-                                suggestions = []
+                        # Execute suggested actions to discover new pages
+                        for suggestion in suggestions[:5]:
+                            ref_id = suggestion.get("ref_id")
+                            action = suggestion.get("action", "click")
 
-                            # Execute suggested actions to discover new pages
-                            for suggestion in suggestions[:5]:  # Max 5 actions per page
-                                ref_id = suggestion.get("ref_id")
-                                action = suggestion.get("action", "click")
-
-                                if action == "click" and ref_id:
-                                    target_el = next(
-                                        (e for e in elements if e.ref_id == ref_id),
-                                        None,
-                                    )
-                                    if target_el and target_el.href:
-                                        # It's a link - add to visit queue
-                                        href = target_el.href
-                                        if href.startswith("/"):
-                                            from urllib.parse import urljoin
-                                            href = urljoin(current_url, href)
-                                        if not href.startswith(("javascript:", "mailto:", "#")):
-                                            to_visit.append((href, current_depth + 1))
-                                            await self.app_graph.record_transition(
-                                                from_url=current_url,
-                                                to_url=href,
-                                                action="click",
-                                                element=target_el.name or f"[{ref_id}]",
-                                            )
-                                            result.transitions_recorded += 1
-
-                        except Exception as e:
-                            logger.warning(f"LLM exploration failed: {e}")
-                            # Fall back to exploring all links
-                            for el in elements:
-                                if el.role == "link" and el.href:
-                                    href = el.href
+                            if action == "click" and ref_id:
+                                target_el = next(
+                                    (e for e in elements if e.ref_id == ref_id),
+                                    None,
+                                )
+                                if target_el and target_el.href:
+                                    href = target_el.href
                                     if href.startswith("/"):
                                         from urllib.parse import urljoin
                                         href = urljoin(current_url, href)
                                     if not href.startswith(("javascript:", "mailto:", "#")):
                                         to_visit.append((href, current_depth + 1))
+                                        await self.app_graph.record_transition(
+                                            from_url=current_url,
+                                            to_url=href,
+                                            action="click",
+                                            element=target_el.name or f"[{ref_id}]",
+                                        )
+                                        result.transitions_recorded += 1
+
+                    except Exception as e:
+                        logger.warning(f"LLM exploration failed: {e}")
+                        # Fall back to exploring all links
+                        for el in elements:
+                            if el.role == "link" and el.href:
+                                href = el.href
+                                if href.startswith("/"):
+                                    from urllib.parse import urljoin
+                                    href = urljoin(current_url, href)
+                                if not href.startswith(("javascript:", "mailto:", "#")):
+                                    to_visit.append((href, current_depth + 1))
 
             # Print summary
             self._print_exploration_summary(result)
@@ -296,10 +285,10 @@ class TestOrchestrator:
                 if step_result.healed:
                     healed += 1
                 if not step_result.passed:
-                    console.print(f"  [red]✗[/red] Step failed: {step.action} → {step_result.error}")
+                    console.print(f"  [red][X][/red] Step failed: {step.action} -> {step_result.error}")
                     break
                 else:
-                    status = "[yellow]healed[/yellow]" if step_result.healed else "[green]✓[/green]"
+                    status = "[yellow]healed[/yellow]" if step_result.healed else "[green][OK][/green]"
                     console.print(f"  {status} {step.action} {step.target}")
 
         finally:
@@ -485,7 +474,7 @@ class TestOrchestrator:
 
     def _print_exploration_summary(self, result: ExplorationResult):
         """Print a rich summary of the exploration."""
-        table = Table(title="🔍 Exploration Summary")
+        table = Table(title="[*] Exploration Summary")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
 
