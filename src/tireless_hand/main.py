@@ -53,7 +53,7 @@ def explore(url: str, depth: int, headless: bool, db: str):
             f"Elements: {result.elements_found} | "
             f"Transitions: {result.transitions_recorded} | "
             f"LLM calls: {result.llm_calls_made}",
-            title="✅ Done",
+            title="[+] Done",
         ))
 
     asyncio.run(_run())
@@ -165,7 +165,7 @@ def generate(url: str, output_dir: str, headless: bool, db: str):
         console.print(Panel(
             f"[green]Generated {len(specs)} test spec(s)[/green]\n"
             f"Output directory: {output_dir}",
-            title="✅ Done",
+            title="[+] Done",
         ))
 
     asyncio.run(_run())
@@ -252,6 +252,30 @@ def status(db: str):
             console.print(page_table)
 
     asyncio.run(_run())
+
+
+@cli.command()
+@click.argument("url")
+@click.option("--headless/--no-headless", default=True, help="Run browser headless")
+@click.option("--output-dir", default="./reports", help="Output directory for reports and videos")
+def audit(url: str, headless: bool, output_dir: str):
+    """Run full Level-1 quality audit with video recording and generate submission document."""
+    async def _run():
+        from .agent.auditor_runner import FullAuditRunner
+
+        runner = FullAuditRunner(base_url=url, headless=headless, output_dir=output_dir)
+        await runner.run_full_audit()
+
+    asyncio.run(_run())
+
+
+@cli.command()
+@click.option("--port", default=8000, help="Local demo server port")
+def demo(port: int):
+    """Start the local FlytBase Mission Control demo app."""
+    from demo.app import start_server
+    start_server(port=port)
+
 
 if __name__ == "__main__":
     cli()
