@@ -188,12 +188,12 @@ def report(cost: bool, healing: bool, coverage: bool, db: str):
             console.print(Panel(
                 "[green]Cost: $0.00[/green] (all inference is local via Ollama)\n"
                 "No API keys used. No cloud bills.",
-                title="💰 Cost Report",
+                title="[*] Cost Report",
             ))
 
         if healing:
             stats = await memory.get_healing_stats()
-            table = Table(title="🔧 Self-Healing Statistics")
+            table = Table(title="[*] Self-Healing Statistics")
             table.add_column("Metric", style="cyan")
             table.add_column("Value", style="green")
             for key, value in stats.items():
@@ -202,7 +202,7 @@ def report(cost: bool, healing: bool, coverage: bool, db: str):
 
         if coverage:
             cov = await graph.get_exploration_coverage()
-            table = Table(title="📊 Coverage Report")
+            table = Table(title="[*] Coverage Report")
             table.add_column("Metric", style="cyan")
             table.add_column("Value", style="green")
             for key, value in cov.items():
