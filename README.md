@@ -46,6 +46,104 @@ Tireless Hand includes a built-in interactive console at **`http://localhost:800
 
 ---
 
+## 🛠️ Complete Tech Stack Breakdown
+
+Tireless Hand is architected with a high-performance, modular stack designed for zero cloud reliance, instantaneous local execution, and rich multi-format reporting:
+
+| Layer / Category | Technology | Purpose & Responsibility |
+| :--- | :--- | :--- |
+| **Core Runtime & Engine** | **Python 3.11+ / AsyncIO** | High-concurrency async test scheduling, invariant evaluation, and task orchestration. |
+| **Browser & Engine Automation** | **Playwright (Chromium)** | High-fidelity headless & headed browser automation with deep Chromium CDP hooks. |
+| **Deep Performance Profiling** | **Chrome DevTools Protocol (CDP)** | Direct sampling of JS Heap memory, Main-Thread Long Tasks ($>50\text{ms}$), LCP, and CLS. |
+| **Target Drone Platforms** | **React 18 / Vite / CesiumJS / WebGL** | Real-world FlytBase 3D globe cockpit, telemetry dashboards, and live mission planners. |
+| **Interactive HUD & Frontend** | **HTML5 / CSS3 Glassmorphism / Vanilla JS** | Zero-dependency live operator console, responsive controls, and audit dispatchers. |
+| **Telemetry & Visual Analytics** | **Chart.js / Canvas 2D API** | Live 60 FPS oscilloscope signal waveform, radar quality charts, and comparative performance bar graphs. |
+| **Web Server & Backend API** | **FastAPI / Starlette / Uvicorn** | High-throughput REST API serving telemetry, audit workers, and live web endpoints (`:8000`). |
+| **Static & Dynamic Analysis** | **Python `ast` / Accessibility Tree** | Compact token-efficient structural DOM traversal, form invariant tracking, and route security checking. |
+| **AI Voice & Speech Synthesis** | **`edge-tts` (Neural TTS)** | High-fidelity synthesized neural AI narration (`en-US-ChristopherNeural`) for automated video reports. |
+| **Video & Media Pipeline** | **`ffmpeg` / `imageio_ffmpeg`** | High-performance audio/video multiplexing, frame capture, and dual WebM / MP4 video generation. |
+| **Data Viz & Chart Generation** | **Matplotlib / NumPy** | Programmatic dark-themed rendering of performance benchmark comparisons and quality radar charts. |
+| **Document & Report Packaging** | **`python-docx` / HTML5 OpenXML** | Automated compilation of standalone evaluation Word documents with embedded binary chart figures. |
+
+---
+
+## 🔄 Complete Flow of Data Diagram
+
+The following diagram illustrates the end-to-end data pipeline from target drone cockpit ingestion to autonomous invariant analysis and multi-format evidence generation:
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef target fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef cdp fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc;
+    classDef engine fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef ai fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#f8fafc;
+    classDef output fill:#701a75,stroke:#ec4899,stroke-width:2px,color:#f8fafc;
+
+    subgraph INGESTION ["1. Target Application & Environment"]
+        APP["FlytBase Drone Cockpit (React + CesiumJS)"]:::target
+        MUT["Mutation Lab Engine (Fault Injection)"]:::target
+    end
+
+    subgraph OBSERVERS ["2. In-Flight CDP & Multi-Viewport Observers"]
+        PW["Playwright Chromium Context"]:::cdp
+        OBS_DOM["DOM & Accessibility Tree Extractor"]:::cdp
+        OBS_PERF["In-Flight Performance Observer (LCP / CLS)"]:::cdp
+        OBS_CDP["CDP JS Heap & Long-Task Profiler (>50ms)"]:::cdp
+        OBS_FPS["WebGL / Cesium 60 FPS Frame Rate Tracker"]:::cdp
+    end
+
+    subgraph ANALYZER ["3. Autonomous Invariant Engine & Self-Healing"]
+        INV_L1["Level 1 Invariant Validator\n(Orphan Forms, Auth Guards, Viewport Clipping)"]:::engine
+        INV_L2["Level 2 Domain Engine\n(Telemetry Invariants, Heap Leaks, UI Latency)"]:::engine
+        HEALER["6-Signal Weighted Self-Healing Engine\n(ID, Tag, ARIA, Text, Tree, Geometry)"]:::engine
+        REASONER["Autonomous Diagnostic Reasoner\n(Root-Cause Analysis & Severity Scoring)"]:::ai
+    end
+
+    subgraph DISPATCH ["4. Interactive Console & Live Telemetry HUD"]
+        FASTAPI["FastAPI REST & Telemetry Server (:8000)"]:::engine
+        HUD["Glassmorphic Operator HUD (:8000/ui)"]:::target
+        CHART["Chart.js & Canvas 60 FPS Waveform HUD"]:::target
+    end
+
+    subgraph OUTPUTS ["5. Multi-Format Evidence & Evaluation Artifacts"]
+        DOCX["Word Submission Docs (.docx)\n(With Embedded High-Res Binary Charts)"]:::output
+        HTML_REP["Interactive HTML Submission Report\n(reports/submission.html)"]:::output
+        VIDEO["Dual-Format Demo Videos (.mp4 / .webm)\n(With Neural AI Voiceover Speech)"]:::output
+        PROOF_PNG["HD Moment-of-Fault PNG Screenshots"]:::output
+    end
+
+    %% Data Flow Links
+    APP -->|Renders UI & Streams Telemetry| PW
+    MUT -->|Injects Layout / Auth / Latency Mutants| PW
+
+    PW --> OBS_DOM
+    PW --> OBS_PERF
+    PW --> OBS_CDP
+    PW --> OBS_FPS
+
+    OBS_DOM -->|Layout Violations & Token Stream| INV_L1
+    OBS_PERF -->|Paint Timing & Layout Shift Metrics| INV_L2
+    OBS_CDP -->|JS Heap Samples & Blocking Task Diffs| INV_L2
+    OBS_FPS -->|Frame Timing Delta Streams| INV_L2
+
+    INV_L1 -->|Broken Selectors| HEALER
+    HEALER -->|Synthesized Robust Selectors| INV_L1
+    INV_L1 -->|Detection Findings| REASONER
+    INV_L2 -->|Performance Anomalies| REASONER
+
+    REASONER -->|JSON Audit Results| FASTAPI
+    FASTAPI -->|Real-Time Telemetry Stream| HUD
+    FASTAPI -->|Benchmark Metric Datasets| CHART
+
+    REASONER -->|Compiles Native Visual Assets| DOCX
+    REASONER -->|Generates Media Cards| HTML_REP
+    REASONER -->|Captures Frame Stream + Neural Audio| VIDEO
+    REASONER -->|Saves Zero-Artifact Snapshots| PROOF_PNG
+```
+
+---
+
 ## 📊 Evaluation Matrix & Benchmark Results
 
 ### 1. Level 1: Static UI, Invariants & Security Testing (12 Vectors)
@@ -96,14 +194,14 @@ python benchmarks/run_level2_perf_benchmark.py
 
 Every audit automatically generates dual visual evidence for complete transparency:
 - **📸 High-Resolution Visual Snapshots**: Captured at the exact moment a defect is identified (`reports/screenshots/`). Static defects display crisp PNGs without empty 0:00 video players.
-- **📹 Full-Length WebM Video Proofs**: Recorded during interactive multi-viewport flows with stream buffer flushes (`reports/videos/`).
+- **📹 Full-Length WebM / MP4 Video Proofs**: Recorded during interactive multi-viewport flows with stream buffer flushes (`reports/videos/`).
 - **🌐 Interactive Submission Report**: View rich cards with side-by-side video players and screenshot proof in `reports/submission.html`.
 - **📄 Word Submission Documents**: 
   - [`Tireless_Hand_Level1_Submission.docx`](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level1_Submission.docx)
   - [`Tireless_Hand_Level2_Submission.docx`](file:///d:/Projects/Tireless%20Hand%20Hackathon/Tireless_Hand_Level2_Submission.docx)
 - **🎥 Video Demonstrations**:
   - [`tireless_hand_1min_demo.webm`](file:///d:/Projects/Tireless%20Hand%20Hackathon/tireless_hand_1min_demo.webm) (1-minute Level 1 system showcase)
-  - [`tireless_hand_level2_demo.webm`](file:///d:/Projects/Tireless%20Hand%20Hackathon/tireless_hand_level2_demo.webm) (Level 2 Performance & Domain Testing showcase)
+  - [`tireless_hand_level2_demo.mp4`](file:///d:/Projects/Tireless%20Hand%20Hackathon/tireless_hand_level2_demo.mp4) / [`tireless_hand_level2_demo.webm`](file:///d:/Projects/Tireless%20Hand%20Hackathon/tireless_hand_level2_demo.webm) (Level 2 Performance & Domain Testing showcase with AI Speech)
 
 ---
 
@@ -141,13 +239,13 @@ Target URL ──► Playwright Browser ──► In-Flight Performance Observer
                       │                                           │
                       └─────────────────────┬─────────────────────┘
                                             ▼
-                              Autonomous AI Reasoner (Local / Ollama)
-                                • Root-Cause Mapping & Remediation
-                                • 6-Signal Self-Healing Engine
+                               Autonomous AI Reasoner (Local / Ollama)
+                                 • Root-Cause Mapping & Remediation
+                                 • 6-Signal Self-Healing Engine
                                             │
                                             ▼
-                           Reports & Verifiable Dual Proofs
-                           (Word Docx, HTML, PNGs & WebM Videos)
+                            Reports & Verifiable Dual Proofs
+                            (Word Docx, HTML, PNGs & WebM Videos)
 ```
 
 1. **Deterministic Fast DOM (<10ms)**: Compact accessibility tree extraction avoids massive token overhead and token window overflow.
