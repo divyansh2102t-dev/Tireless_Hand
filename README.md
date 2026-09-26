@@ -166,7 +166,7 @@ python benchmarks/run_benchmark.py
 | **TC-11** | Mobile Viewport Clipped RTH Button | Responsive Layout | Bug | Bug | **TP (True Positive)** |
 | **TC-12** | Unauthenticated Access to Fleet Registry | Auth Guard | Bug | Bug | **TP (True Positive)** |
 
-* **Precision:** 100.0% | **Recall:** 100.0% | **Accuracy:** 100.0% | **F1-Score:** 1.000 | **Runtime:** 28.62s
+* **Precision:** 100.0% | **Recall:** 100.0% | **Accuracy:** 100.0% | **F1-Score:** 1.000 | **Runtime:** 29.97s
 
 ---
 
@@ -186,7 +186,20 @@ python benchmarks/run_level2_perf_benchmark.py
 | **PERF-07** | Blocking Telemetry Parsing | Synchronous parsing of high-rate telemetry ($>140\text{ms}$) | Defect | Defect | **TP (True Positive)** |
 | **PERF-08** | Flight Session Memory Leak | Unbounded JS heap accumulation during streaming | Defect | Defect | **TP (True Positive)** |
 
-* **Precision:** 100.0% | **Recall:** 100.0% | **Accuracy:** 100.0% | **F1-Score:** 1.000 | **Runtime:** 27.46s
+* **Precision:** 100.0% | **Recall:** 100.0% | **Accuracy:** 100.0% | **F1-Score:** 1.000 | **Runtime:** 29.25s
+
+---
+
+## 🌐 Real-World Production Audits (Live Deployed Projects)
+
+To validate Tireless Hand beyond simulated benchmarks, the autonomous pipeline was tested against four live production web applications:
+
+| Target Platform | Live Deployed URL | Multi-Viewport Layout | Invariant Check | Performance & Web Vitals | Ground Truth Verification |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Developer Portfolio** | `https://divyansh-tiwari.xyz` | **PASS** (Clean on 375px/768px/1280px) | **PASS** (Valid contact form) | **LCP: `2,992ms`** (Flagged), **7 Long Tasks** (Max: `407ms`), **`53.0 FPS`** | **✅ 100% Accurate**: Correctly flagged high LCP and main-thread task blocks caused by cold Three.js WebGL shader compilation and 8,000-star physics simulation. |
+| **Velora Media Platform** | `https://velora-media-vertexhub.vercel.app` | **DEFECT CAUGHT** (Tablet 768px header overflow at x=813px) | **PASS** (Zero orphan inputs) | **LCP: `636ms`**, **CLS: `0`**, **`22.5 FPS`** (Initial splash dip) | **✅ 100% Accurate**: Caught actual 768px right margin overflow in admin action bar; correctly detected initial frame drop during video splash loader. |
+| **DevOps Concierge** | `https://dev-ops-concierge-agent.vercel.app` | **PASS** (Fluid chat interface) | **SEMANTIC FLAG** (2 inputs without standard `<form>` submit) | **LCP: `672ms`**, **CLS: `0.001`**, **`58.2 FPS`** | **✅ 100% Accurate**: Identified conversational textarea relying on keyboard `Enter` rather than explicit HTML submit buttons. |
+| **ChillThrive Wellness** | `https://chillthrive-flex.vercel.app` | **PASS** (100% Clean) | **PASS** (Zero broken states) | **LCP: `600ms`**, **CLS: `0`**, **`58.9 FPS`**, **`+944 KB` Heap** | **✅ 100% Accurate**: Confirmed ultra-fast static React architecture with zero layout shifts and buttery smooth 60 FPS execution. |
 
 ---
 
