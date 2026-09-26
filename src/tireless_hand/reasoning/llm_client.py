@@ -43,14 +43,12 @@ class TieredLLMClient:
 
         try:
             response = await client.chat(model=model, messages=messages)
-        except ollama.ResponseError as e:
-            if "not found" in str(e).lower():
-                raise RuntimeError(f"Model {model} not found. Please run 'ollama run {model}' to download it.") from e
-            raise
         except Exception as e:
-            if "not found" in str(e).lower() or "not found" in getattr(e, "message", "").lower():
-                raise RuntimeError(f"Model {model} not found. Please run 'ollama run {model}' to download it.") from e
-            raise
+            if "not found" in str(e).lower() and model != self.fast_model:
+                # Fallback to fast model if requested model isn't pulled
+                response = await client.chat(model=self.fast_model, messages=messages)
+            else:
+                raise
 
         elapsed = time.time() - start_time
         self._stats["calls"][tier] += 1
@@ -64,7 +62,10 @@ class TieredLLMClient:
         return await self._query(self.fast_model, "fast", prompt, system)
 
     async def query_smart(self, prompt: str, system: str = None) -> str:
-        return await self._query(self.smart_model, "smart", prompt, system)
+        try:
+            return await self._query(self.smart_model, "smart", prompt, system)
+        except Exception:
+            return await self._query(self.fast_model, "fast", prompt, system)
 
     async def query_vision(self, prompt: str, image_path: str) -> str:
         return await self._query(self.vision_model, "vision", prompt, image_path=image_path)
