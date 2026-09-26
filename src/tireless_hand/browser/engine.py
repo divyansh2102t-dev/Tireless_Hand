@@ -62,6 +62,7 @@ class BrowserEngine:
         self._browser = await self._playwright.chromium.launch(
             headless=self.config.headless,
             slow_mo=self.config.slow_mo,
+            args=["--enable-precise-memory-info", "--no-sandbox", "--disable-setuid-sandbox"]
         )
 
         should_record = self.config.record_video if record_video is None else record_video

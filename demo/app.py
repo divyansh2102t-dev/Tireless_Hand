@@ -1449,14 +1449,25 @@ class DemoServerHandler(http.server.SimpleHTTPRequestHandler):
 
         # 2. Cockpit Dashboard
         if path == "/dashboard":
+            perf_mutation = query.get("perf_mutation", ["none"])[0]
             status_class = "badge-offline" if mutation == "telemetry_conflict" else "badge-online"
             status_text = "Status: Offline" if mutation == "telemetry_conflict" else "Status: Online"
             action_style = "position: relative; width: 600px;" if mutation == "responsive_clip" else ""
             rth_style = "position: absolute; left: 520px;" if mutation == "responsive_clip" else ""
 
+            perf_script = ""
+            if perf_mutation == "slow_lcp":
+                perf_script = "<script>const start=performance.now(); while(performance.now()-start<3600){}</script><div style='height:180px;background:#334155;color:#38bdf8;padding:24px;border-radius:8px;margin-bottom:20px;font-weight:bold;'>🛰️ High-Resolution Satellite Map Tile (Delayed LCP Render)</div>"
+            elif perf_mutation == "telemetry_cls":
+                perf_script = "<script>setTimeout(() => { const b=document.createElement('div'); b.style.cssText='height:260px;background:#ef4444;color:#fff;padding:20px;font-weight:bold;margin-bottom:20px;border-radius:8px;'; b.innerHTML='⚠️ UNBUFFERED TELEMETRY STREAM (UNSTABLE LAYOUT SHIFT)'; const grid=document.querySelector('.grid'); if(grid) grid.parentNode.insertBefore(b, grid); }, 200);</script>"
+            elif perf_mutation == "long_tasks":
+                perf_script = "<script>setInterval(() => { const s=performance.now(); while(performance.now()-s<180){} }, 350);</script>"
+            elif perf_mutation == "memory_leak":
+                perf_script = "<script>window.__leak_storage=[]; setInterval(() => { for(let i=0;i<30000;i++){ window.__leak_storage.push(new Array(200).fill('telemetry_packet_uncollected_' + Math.random())); } }, 100);</script>"
+
             html = (
                 HTML_DASHBOARD
-                .replace("__HEADER__", HTML_HEADER)
+                .replace("__HEADER__", HTML_HEADER + perf_script)
                 .replace("__STATUS_BADGE_CLASS__", status_class)
                 .replace("__STATUS_TEXT__", status_text)
                 .replace("__ACTION_BAR_STYLE__", action_style)
