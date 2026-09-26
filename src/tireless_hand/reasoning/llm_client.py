@@ -169,8 +169,15 @@ class TieredLLMClient:
             elif self.provider == "gemini" and self.gemini_api_key:
                 result = await self._query_gemini(prompt, system)
             else:
-                # Default Ollama
-                result = await self._query_ollama(model, prompt, system, image_path)
+                # Primary: Ollama
+                try:
+                    result = await self._query_ollama(model, prompt, system, image_path)
+                except Exception as ollama_err:
+                    if self.openai_api_key:
+                        logger.info(f"Ollama unavailable ({ollama_err}). Falling back to OpenAI API key.")
+                        result = await self._query_openai(self.openai_model or "gpt-5-nano", prompt, system)
+                    else:
+                        raise ollama_err
         except Exception as e:
             logger.warning(f"LLM call to {self.provider} ({model}) failed or unavailable: {e}. Using deterministic heuristic fallback.")
             if system == SYSTEM_DOM_RESOLVER or "Target:" in prompt:
