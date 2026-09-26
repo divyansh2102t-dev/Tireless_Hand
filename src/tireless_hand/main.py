@@ -287,5 +287,19 @@ def demo(port: int):
     start_server(port=port)
 
 
+@cli.command()
+@click.option("--port", default=8000, help="Local UI port")
+@click.option("--open-browser/--no-open", default=True, help="Open browser automatically")
+def ui(port: int, open_browser: bool):
+    """Launch the interactive Floating Horizontal Agent Bar HUD."""
+    import webbrowser
+    url = f"http://localhost:{port}/ui"
+    console.print(f"[bold cyan]Tireless Hand Agent HUD[/bold cyan] running at [green]{url}[/green]")
+    if open_browser:
+        webbrowser.open(url)
+    from demo.app import start_server
+    start_server(port=port)
+
+
 if __name__ == "__main__":
     cli()
