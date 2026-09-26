@@ -1,0 +1,45 @@
+# Tireless Hand Configuration
+agent:
+  max_retries: 3
+  action_timeout: 10000  # ms
+  navigation_timeout: 30000  # ms
+  exploration_depth: 3
+
+healing:
+  # Minimum similarity score to auto-heal (0.0-1.0)
+  min_similarity: 0.75
+  # Enable visual fallback when DOM matching fails
+  visual_fallback: true
+  # Max LLM calls per test run for healing
+  max_llm_heals_per_run: 10
+
+models:
+  # Tier 1: Fast local model for simple tasks
+  fast:
+    provider: ollama
+    model: qwen2.5-coder:1.5b
+    temperature: 0.1
+    max_tokens: 512
+  # Tier 2: Smarter model for complex reasoning
+  smart:
+    provider: ollama
+    model: qwen2.5-coder:7b
+    temperature: 0.2
+    max_tokens: 2048
+  # Tier 3: Vision model for screenshot analysis
+  vision:
+    provider: ollama
+    model: llava:latest
+    temperature: 0.1
+    max_tokens: 1024
+
+memory:
+  db_path: ./memory/app_graph.db
+  baseline_dir: ./memory/baselines
+  # Auto-save memory every N actions
+  save_interval: 10
+
+reporting:
+  output_dir: ./reports
+  html_reports: true
+  screenshot_on_failure: true

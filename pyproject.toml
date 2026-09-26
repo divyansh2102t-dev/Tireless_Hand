@@ -1,0 +1,45 @@
+[project]
+name = "tireless-hand"
+version = "0.1.0"
+description = "Autonomous UI testing agent that self-heals, remembers, and distinguishes bugs from features"
+requires-python = ">=3.11"
+dependencies = [
+    "playwright",
+    "ollama",
+    "beautifulsoup4",
+    "lxml",
+    "rich",
+    "pyyaml",
+    "click",
+    "aiosqlite",
+    "Pillow",
+    "jinja2",
+    "scikit-learn",
+    "python-Levenshtein",
+    "imagehash",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[project.scripts]
+tireless = "tireless_hand.main:cli"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
