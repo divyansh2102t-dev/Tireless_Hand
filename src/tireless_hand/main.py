@@ -301,5 +301,36 @@ def ui(port: int, open_browser: bool):
     start_server(port=port)
 
 
+@cli.command()
+@click.option("--port", default=8000, help="Local UI port")
+@click.option("--open-browser/--no-open", default=True, help="Open browser automatically")
+def start(port: int, open_browser: bool):
+    """Start all Tireless Hand components (server, agent backend, and floating HUD) at once."""
+    import webbrowser
+    url = f"http://localhost:{port}/ui"
+    console.print(f"[bold green]Starting Tireless Hand Unified Platform...[/bold green]")
+    console.print(f"[bold cyan]Agent HUD & Mission Control:[/bold cyan] [green]{url}[/green]")
+    if open_browser:
+        webbrowser.open(url)
+    from demo.app import start_server
+    start_server(port=port)
+
+
+@cli.command()
+@click.option("--port", default=8000, help="Local UI port")
+@click.option("--open-browser/--no-open", default=True, help="Open browser automatically")
+def run(port: int, open_browser: bool):
+    """Alias for 'tireless start' to run all components at once."""
+    import webbrowser
+    url = f"http://localhost:{port}/ui"
+    console.print(f"[bold green]Starting Tireless Hand Unified Platform...[/bold green]")
+    console.print(f"[bold cyan]Agent HUD & Mission Control:[/bold cyan] [green]{url}[/green]")
+    if open_browser:
+        webbrowser.open(url)
+    from demo.app import start_server
+    start_server(port=port)
+
+
 if __name__ == "__main__":
     cli()
+

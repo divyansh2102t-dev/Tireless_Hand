@@ -1,59 +1,62 @@
-# Tireless Hand
+# ⚡ Tireless Hand
 
-Autonomous UI testing agent with self-healing selectors, persistent app memory, bug vs feature differentiation, and automated video evidence capture. Runs entirely on local LLMs via Ollama — zero API keys, zero cloud costs.
+> **Autonomous Agentic UI & Reliability Auditor for FlytBase Cockpits & Web Applications.**  
+> Features self-healing selectors, multi-viewport layout verification, invariant telemetry checking, floating interactive HUD, and automated dual visual evidence (HD PNG snapshots + WebM video recordings). Runs 100% locally on free Ollama models with seamless Cloud API fallback.
 
 ---
 
-## ⚡ 3-Minute Quickstart (For Any Web Page)
+## 🚀 One-Command Instant Launch (Zero Setup)
 
-### 1. Installation & Prerequisites
-Make sure [Ollama](https://ollama.ai) is running locally, then:
+Launch the entire platform (Mock server, Agent Backend, Defect Mutation Lab, and Floating Interactive HUD) with a **single command**:
 
 ```bash
-# Clone the repository
-git clone https://github.com/divyansh2102t-dev/Tireless_Hand.git
-cd Tireless_Hand
-
-# Install dependencies and browser engine
+# 1. Install dependencies & browser engine
 pip install -e .
 playwright install chromium
 
-# Pull the lightweight local AI model (fast & 100% free)
-ollama pull qwen2.5-coder:1.5b
+# 2. Start all components & open UI in one command
+python run.py
 ```
+*(Or use the CLI command: `tireless start`)*
 
-### 2. Test Any Web Page
+This instantly opens the **Interactive Agent HUD** in your default browser at **`http://localhost:8000/ui`**.
 
-#### Option A: Full Quality & Security Audit (with Video Proofs)
-Run a complete audit for responsive UI breaks, orphan forms, contradictory telemetry, and security bypasses:
+---
 
+## 🎛️ Interactive Floating Agent HUD (No Terminal Needed)
+
+Tireless Hand includes a built-in floating glassmorphic HUD that lets you test any website or drone cockpit directly from your browser:
+
+* **Target URL Input**: Enter any target URL (e.g. `http://localhost:4010` for FlytBase Cockpit, `http://localhost:8000/broken`, or your own web app).
+* **`[x] Watch Live` Toggle**: Toggles live headed Chromium browser observation so you can watch the agent click, inspect, and audit in real-time.
+* **⚡ Audit**: Triggers complete Level-1 defect analysis across viewports (1280px / 768px / 375px), auth guards, and forms.
+* **🔍 Explore**: Crawls and builds persistent memory graphs of pages and interactive buttons.
+* **📊 Benchmark**: Runs the full 12-scenario evaluation matrix and live updates metrics.
+* **📄 Reports**: Opens the latest interactive HTML report with video recordings and snapshot proofs.
+* **Live Log Drawer**: Real-time streaming console showing defect detection and agent actions.
+
+---
+
+## 🧠 Multi-Tier Model Cascading (Local + Cloud Fallback)
+
+Tireless Hand is engineered to work reliably on any machine without blocking:
+
+1. **Tier 1 (Primary - 100% Free & Local)**: Local **Ollama** (`qwen2.5-coder:1.5b` or custom `tireless-resolver`). Zero API keys, zero cloud costs, 100% private.
+2. **Tier 2 (Secondary - Cloud API Fallback)**: If Ollama is not installed or running, automatically uses **OpenAI API** (`gpt-5-nano`, `gpt-4o-mini`, etc.) configured in `.env`.
+3. **Tier 3 (Tertiary - Deterministic Heuristics)**: Built-in deterministic DOM TreeWalker and geometric layout analyzers guarantee 0% crash rate even if no LLMs are reachable.
+
+### Optional Cloud Setup
+Copy the template and add your API key if you want cloud inference:
 ```bash
-# Headless background mode (Fast)
-tireless audit https://example.com
-
-# Headed mode (Opens a visible browser so you can watch it live!)
-tireless audit http://localhost:8000/login --no-headless
+cp .env.example .env
 ```
-
-#### Option B: Autonomous AI Exploration & Page Mapping
-Have the AI explore any website, discover interactive buttons/forms, and map them to memory:
-
-```bash
-tireless explore https://example.com --depth 2
-```
-
-#### Option C: Step-by-Step Test with Self-Healing Selectors
-Run a test flow that automatically heals broken selectors if the website's HTML/CSS changes:
-
-```bash
-tireless test http://localhost:8000/login --report
-```
+*(Edit `.env` and insert your `OPENAI_API_KEY` or `SMALLEST_API_KEY`)*
 
 ---
 
 ## 📊 Evaluation Matrix & Benchmark Results
 
-We benchmarked Tireless Hand across a diverse matrix of **12 distinct clean and mutated test vectors** spanning login portals, cockpit telemetry, mission planners, responsive fleet tables, hardware diagnostics, and protected security routes:
+We benchmarked Tireless Hand against **12 distinct clean and mutated test vectors** spanning login forms, telemetry streams, mission planners, responsive fleet tables, hardware sensors, and protected security routes:
 
 ```bash
 python benchmarks/run_benchmark.py
@@ -88,50 +91,59 @@ python benchmarks/run_benchmark.py
 | **Recall** | $\frac{\text{TP}}{\text{TP} + \text{FN}}$ | **100.0% (1.0000)** |
 | **Accuracy** | $\frac{\text{TP} + \text{TN}}{\text{Total}}$ | **100.0% (1.0000)** |
 | **F1-Score** | $2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$ | **100.0% (1.0000)** |
-| **Benchmark Runtime** | Total Execution Time (12 vectors) | **29.33s** |
+| **Benchmark Runtime** | Total Execution Time (12 vectors) | **28.62s** |
 
 ---
 
-## 📁 Where to View Results & Videos
+## 📁 Dual Evidence Pipeline (Screenshots + Videos)
 
-After running an audit or test, check the generated artifacts in `reports/`:
-- **Interactive HTML Report**: Open `reports/submission.html` in your browser.
-- **Summary Document**: Check `reports/SUBMISSION.md`.
-- **Screen Recordings**: High-definition `.webm` video proofs are automatically saved in `reports/videos/`.
-
----
-
-## 🧪 Built-in Local Benchmark / Demo Server
-
-To practice and verify Level-1 mutation scenarios offline without any external setup:
-
-1. **Start the local drone mission control server**:
-   ```bash
-   tireless demo --port 8000
-   ```
-2. **In another terminal, run the full mutation audit suite**:
-   ```bash
-   tireless audit --suite
-   ```
+Every audit automatically generates dual visual evidence for complete transparency:
+- **📸 High-Resolution Visual Snapshots**: Captured at the exact moment a defect is identified (`reports/screenshots/`).
+- **📹 Full-Length WebM Video Recordings**: Recorded across multi-viewport interactions with stream buffer flushes (`reports/videos/`).
+- **🌐 Interactive Submission Report**: View rich cards with side-by-side video players and screenshot proof in `reports/submission.html`.
+- **📝 Markdown Submission Summary**: Generated at `reports/SUBMISSION.md`.
 
 ---
 
-## 🛠️ CLI Reference
+## 🧪 Testing with FlytBase Starter Kit & Custom Sites
+
+### Testing the Official FlytBase Drone Starter Kit
+If you have the FlytBase Hackathon Docker container running:
+```bash
+# 1. Start the FlytBase Docker container (if applicable)
+docker compose up --build
+
+# 2. Audit the FlytBase Cockpit at port 4010
+tireless audit http://localhost:4010 --no-headless
+```
+
+### Testing the Built-in Mutation Testbed
+```bash
+# Run complete Level-1 mutation suite
+tireless audit --suite
+```
+
+---
+
+## 🛠️ Complete CLI Command Reference
 
 | Command | Description | Example |
 | :--- | :--- | :--- |
-| `tireless audit <URL>` | Full multi-viewport audit with video recording | `tireless audit http://localhost:4010` |
+| `python run.py` | **One-command launch** for server, backend & browser HUD | `python run.py` |
+| `tireless start` | Starts all components and opens the HUD in browser | `tireless start` |
+| `tireless ui` | Opens the floating interactive HUD at `http://localhost:8000/ui` | `tireless ui` |
+| `tireless audit <URL>` | Full multi-viewport audit with video and screenshot proof | `tireless audit http://localhost:4010` |
+| `tireless audit <URL> --no-headless` | Runs audit with a visible browser window | `tireless audit http://localhost:8000/broken --no-headless` |
 | `tireless audit --suite` | Runs full Level-1 mutation testbed suite | `tireless audit --suite` |
-| `tireless explore <URL>` | Autonomous web crawler & knowledge mapper | `tireless explore https://example.com --depth 3` |
-| `tireless test <URL>` | Runs test flows with AI self-healing | `tireless test https://example.com --report` |
-| `tireless generate <URL>` | Auto-generates declarative YAML test specs | `tireless generate https://example.com --output-dir test_specs/` |
+| `tireless explore <URL>` | Autonomous web crawler & graph knowledge mapper | `tireless explore http://localhost:8000 --depth 3` |
+| `tireless test <URL>` | Runs test flows with AI self-healing selectors | `tireless test http://localhost:8000/login --report` |
 | `tireless status` | Shows discovered pages and graph knowledge | `tireless status` |
-| `tireless report` | Displays healing, coverage, and cost stats | `tireless report --healing --coverage --cost` |
-| `tireless demo` | Starts the built-in drone testbed on port 8000 | `tireless demo --port 8000` |
+| `tireless report` | Displays healing, coverage, and cost statistics | `tireless report --healing --coverage --cost` |
+| `python benchmarks/run_benchmark.py` | Runs and evaluates the 12-scenario benchmark matrix | `python benchmarks/run_benchmark.py` |
 
 ---
 
-## 🧠 Architecture & How It Works
+## 🧠 Architecture & Technical Highlights
 
 ```
 Target URL ──► Playwright Browser ──► JS TreeWalker (Compact A11y DOM)
@@ -143,7 +155,7 @@ Target URL ──► Playwright Browser ──► JS TreeWalker (Compact A11y DO
    │ • Responsive (1280/768/375px) │                  │ • Goal Planning & Crawling    │
    │ • Orphan Forms & Invariants   │                  │ • 6-Signal Self-Healing Engine│
    │ • Auth & Security Bypasses    │                  │ • Bug vs Feature Classifier   │
-   │ • Video Capture (.webm)       │                  └───────────────────────────────┘
+   │ • Screenshots & Video Proofs  │                  └───────────────────────────────┘
    └───────────────────────────────┘                               │
                      │                                             │
                      └──────────────────────┬──────────────────────┘
@@ -151,8 +163,7 @@ Target URL ──► Playwright Browser ──► JS TreeWalker (Compact A11y DO
                            Reports & Evidence (HTML / Markdown)
 ```
 
-### Key Technical Pillars
-1. **Deterministic DOM First (<10ms)**: Uses a custom JavaScript TreeWalker to extract clean, accessible roles, labels, text, and bounding boxes instead of dumping bloated raw HTML.
-2. **Cascading 6-Signal Self-Healing**: Recovers altered UI selectors via weighted multi-signal matching (ID, tag, ARIA, text, hierarchy, layout) with zero-shot local LLM fallback.
+1. **Deterministic Fast DOM (<10ms)**: Compact accessibility tree extraction avoids massive token overhead and token window overflow.
+2. **6-Signal Weighted Self-Healing**: Recovers altered UI selectors via weighted signal matching (ID, Tag, ARIA, Text, Tree Hierarchy, Bounding Box).
 3. **Multi-Viewport Layout Auditing**: Calculates exact pixel boundary violations across Desktop (1280px), Tablet (768px), and Mobile (375px) to catch clipped CTAs and overflow bugs.
-4. **100% Local & Free**: Uses local models (`qwen2.5-coder:1.5b`, `tireless-resolver`) via Ollama. No third-party API keys required, zero cloud costs.
+4. **Buffer-Safe Video & Screenshot Recording**: Enforces video encoder stream flushing before context destruction to guarantee playable videos and captures instant high-res PNGs.
