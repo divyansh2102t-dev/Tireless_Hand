@@ -30,7 +30,7 @@ Tireless Hand is an autonomous end-to-end agentic quality verification system bu
 
 3. **Tiered Local Reasoning Engine & Reproducible Video Evidence**
    - Runs on local Ollama models (Qwen2.5-Coder 1.5B / tireless-resolver) with zero external API dependencies.
-   - Every single test scenario automatically records full-motion video (.webm) and browser network/console traces to provide proof of every caught defect.
+   - Every single test scenario automatically records full-motion video (.webm), full-resolution defect screenshots, and network traces.
 """
 
 
@@ -46,15 +46,26 @@ class FullAuditRunner:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.video_dir = self.output_dir / "videos"
         self.video_dir.mkdir(parents=True, exist_ok=True)
+        self.screenshot_dir = self.output_dir / "screenshots"
+        self.screenshot_dir.mkdir(parents=True, exist_ok=True)
 
         self.browser_config = BrowserConfig(
             headless=headless,
-            slow_mo=30,
+            slow_mo=50,
             record_video=True,
             video_dir=self.video_dir,
-            screenshot_dir=self.output_dir / "screenshots",
+            screenshot_dir=self.screenshot_dir,
         )
         self.submission_gen = SubmissionGenerator(output_dir=str(self.output_dir))
+
+    async def _capture_screenshot(self, page, scenario_id: int) -> str:
+        filename = f"defect_scenario_{scenario_id}_{int(time.time())}.png"
+        target_path = self.screenshot_dir / filename
+        try:
+            await page.screenshot(path=str(target_path), full_page=False)
+            return str(target_path)
+        except Exception:
+            return ""
 
     async def run_full_audit(self) -> List[ScenarioReport]:
         scenarios: List[ScenarioReport] = []
@@ -70,7 +81,7 @@ class FullAuditRunner:
 
             console.print(f"[bold cyan][*] Starting Level-1 Agentic Audit for:[/bold cyan] {self.base_url}")
             await engine.goto(self.base_url)
-            await page.wait_for_timeout(500)
+            await page.wait_for_timeout(800)
 
             # Audit 1: Invariant & Orphan Form Audit
             console.print("[dim]-> Running Invariant & Broken Flow Auditor...[/dim]")
@@ -78,7 +89,7 @@ class FullAuditRunner:
             inv_issues = await invariant_auditor.audit_page_invariants(page)
 
             for issue in inv_issues:
-                video_path = await engine.get_video_path() or str(self.video_dir / "audit_session.webm")
+                shot_path = await self._capture_screenshot(page, scenario_counter)
                 category = "Functional UI" if issue.issue_type == "orphan_form" else "Telemetry / State Invariant"
                 scenarios.append(
                     ScenarioReport(
@@ -90,7 +101,8 @@ class FullAuditRunner:
                             "Autonomous Invariant Auditor inspected the semantic DOM and accessibility tree, "
                             "comparing input field counts against available actionable buttons and analyzing telemetry badges."
                         ),
-                        video_path=video_path,
+                        video_path="",
+                        screenshot_path=shot_path,
                         steps_to_reproduce=[
                             f"Open browser and navigate to '{page.url}'.",
                             f"Observe the rendered UI state and interactive components.",
@@ -109,7 +121,7 @@ class FullAuditRunner:
             resp_issues = await responsive_auditor.audit_page(page, self.base_url)
 
             for issue in resp_issues:
-                video_path = await engine.get_video_path() or str(self.video_dir / "audit_session.webm")
+                shot_path = await self._capture_screenshot(page, scenario_counter)
                 scenarios.append(
                     ScenarioReport(
                         id=scenario_counter,
@@ -120,7 +132,8 @@ class FullAuditRunner:
                             f"Responsive Auditor cycled browser viewports down to mobile width ({issue.width}x{issue.height}px) "
                             "and measured bounding rects against viewport boundaries to catch horizontal overflow and clipped buttons."
                         ),
-                        video_path=video_path,
+                        video_path="",
+                        screenshot_path=shot_path,
                         steps_to_reproduce=[
                             f"Open browser and resize viewport to {issue.width}x{issue.height} ({issue.viewport}).",
                             f"Navigate to '{self.base_url}'.",
@@ -142,7 +155,7 @@ class FullAuditRunner:
                     base_url=self.base_url,
                 )
                 for issue in sec_issues:
-                    video_path = await engine.get_video_path() or str(self.video_dir / "audit_session.webm")
+                    shot_path = await self._capture_screenshot(page, scenario_counter)
                     scenarios.append(
                         ScenarioReport(
                             id=scenario_counter,
@@ -153,7 +166,8 @@ class FullAuditRunner:
                                 "Security Auditor initialized an unauthenticated browser context with zero cookies/tokens "
                                 f"and executed direct HTTP GET to '{issue.url}', evaluating response code and DOM exposure."
                             ),
-                            video_path=video_path,
+                            video_path="",
+                            screenshot_path=shot_path,
                             steps_to_reproduce=[
                                 "Launch a clean incognito / unauthenticated browser session (no auth cookies).",
                                 f"Navigate directly to '{issue.url}'.",
@@ -166,24 +180,23 @@ class FullAuditRunner:
                     )
                     scenario_counter += 1
 
+            await page.wait_for_timeout(1500)
+
         finally:
             video_file = await engine.stop()
-            # If video_file was created, backfill any empty video_path
             if video_file:
                 for s in scenarios:
-                    if not s.video_path or not Path(s.video_path).exists():
-                        s.video_path = video_file
+                    s.video_path = video_file
 
-        # Generate output documents
-        md_file = self.submission_gen.generate_markdown(SYSTEM_DESIGN_TEXT, scenarios, "SUBMISSION.md")
-        html_file = self.submission_gen.generate_html(SYSTEM_DESIGN_TEXT, scenarios, "submission.html")
+        md_file = self.submission_gen.generate_markdown(SYSTEM_DESIGN_TEXT, scenarios)
+        html_file = self.submission_gen.generate_html(SYSTEM_DESIGN_TEXT, scenarios)
 
         console.print()
         console.print(
             Panel(
                 f"[bold green]Audit Finished! Caught {len(scenarios)} Issue(s)[/bold green]\n"
                 f"Markdown Report: [cyan]{md_file}[/cyan]\n"
-                f"HTML Report (with videos): [cyan]{html_file}[/cyan]",
+                f"HTML Report (with videos & screenshots): [cyan]{html_file}[/cyan]",
                 title="[+] Audit Complete",
             )
         )
@@ -206,12 +219,13 @@ class FullAuditRunner:
                     continue
 
                 await engine.goto(url)
-                await page.wait_for_timeout(600)
+                await page.wait_for_timeout(1000)
 
                 # Invariant Audit
                 invariant_auditor = InvariantAuditor()
                 inv_issues = await invariant_auditor.audit_page_invariants(page)
                 for issue in inv_issues:
+                    shot_path = await self._capture_screenshot(page, scenario_counter)
                     current_scenarios.append(
                         ScenarioReport(
                             id=scenario_counter,
@@ -220,6 +234,7 @@ class FullAuditRunner:
                             description=issue.description,
                             approach="Autonomous Invariant Auditor inspected the semantic accessibility tree and detected invariant violations.",
                             video_path="",
+                            screenshot_path=shot_path,
                             steps_to_reproduce=[
                                 f"Open browser and navigate to '{page.url}'.",
                                 f"Observe that: {issue.details}",
@@ -235,6 +250,7 @@ class FullAuditRunner:
                 responsive_auditor = ResponsiveAuditor()
                 resp_issues = await responsive_auditor.audit_page(page, url)
                 for issue in resp_issues:
+                    shot_path = await self._capture_screenshot(page, scenario_counter)
                     current_scenarios.append(
                         ScenarioReport(
                             id=scenario_counter,
@@ -243,6 +259,7 @@ class FullAuditRunner:
                             description=f"Actionable UI element or layout is clipped/unusable on {issue.viewport} screens.",
                             approach=f"Responsive Auditor tested viewports down to mobile ({issue.width}px) and measured bounding rects against screen bounds.",
                             video_path="",
+                            screenshot_path=shot_path,
                             steps_to_reproduce=[
                                 f"Open browser and set viewport to {issue.width}x{issue.height} ({issue.viewport}).",
                                 f"Navigate to '{url}'.",
@@ -261,6 +278,7 @@ class FullAuditRunner:
                     if engine._browser:
                         sec_issues = await security_auditor.audit_unauthenticated_access(engine._browser, url)
                         for issue in sec_issues:
+                            shot_path = await self._capture_screenshot(page, scenario_counter)
                             current_scenarios.append(
                                 ScenarioReport(
                                     id=scenario_counter,
@@ -269,6 +287,7 @@ class FullAuditRunner:
                                     description=issue.description,
                                     approach="Security Auditor tested unauthenticated GET access against protected routes without cookies.",
                                     video_path="",
+                                    screenshot_path=shot_path,
                                     steps_to_reproduce=[
                                         "Launch clean unauthenticated browser context (zero cookies).",
                                         f"Navigate directly to '{issue.url}'.",
@@ -281,6 +300,9 @@ class FullAuditRunner:
                             )
                             scenario_counter += 1
 
+                # Wait enough for high quality video stream encoding
+                await page.wait_for_timeout(1500)
+
             finally:
                 video_file = await engine.stop()
                 if video_file:
@@ -288,16 +310,17 @@ class FullAuditRunner:
                         s.video_path = video_file
                 all_scenarios.extend(current_scenarios)
 
-        md_file = self.submission_gen.generate_markdown(SYSTEM_DESIGN_TEXT, all_scenarios, "SUBMISSION.md")
-        html_file = self.submission_gen.generate_html(SYSTEM_DESIGN_TEXT, all_scenarios, "submission.html")
+        md_file = self.submission_gen.generate_markdown(SYSTEM_DESIGN_TEXT, all_scenarios)
+        html_file = self.submission_gen.generate_html(SYSTEM_DESIGN_TEXT, all_scenarios)
 
         console.print()
         console.print(
             Panel(
                 f"[bold green]Suite Audit Complete! Caught {len(all_scenarios)} Total Issue(s)[/bold green]\n"
                 f"Markdown Report: [cyan]{md_file}[/cyan]\n"
-                f"HTML Report (with videos): [cyan]{html_file}[/cyan]",
+                f"HTML Report (with videos & screenshots): [cyan]{html_file}[/cyan]",
                 title="[+] Suite Complete",
             )
         )
+
         return all_scenarios

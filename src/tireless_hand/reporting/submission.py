@@ -15,8 +15,9 @@ class ScenarioReport:
     video_path: str
     steps_to_reproduce: List[str]
     severity: str  # "CRITICAL", "HIGH", "MEDIUM", "LOW"
-    status: str = "FAILED"  # Bug detected (FAILED = product bug caught)
+    status: str = "FAILED (Bug Caught)"  # Bug detected (FAILED = product bug caught)
     evidence: str = ""
+    screenshot_path: Optional[str] = None
 
 
 class SubmissionGenerator:
@@ -25,6 +26,10 @@ class SubmissionGenerator:
     def __init__(self, output_dir: str = "./reports"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.screenshot_dir = self.output_dir / "screenshots"
+        self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+        self.video_dir = self.output_dir / "videos"
+        self.video_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_markdown(
         self,
@@ -51,23 +56,32 @@ class SubmissionGenerator:
         ]
 
         for s in scenarios:
+            video_rel = os.path.relpath(s.video_path, start=str(self.output_dir)).replace("\\", "/") if s.video_path and os.path.exists(s.video_path) else (s.video_path or "").replace("\\", "/")
+            screenshot_rel = os.path.relpath(s.screenshot_path, start=str(self.output_dir)).replace("\\", "/") if s.screenshot_path and os.path.exists(s.screenshot_path) else (s.screenshot_path or "").replace("\\", "/")
+
             lines.extend(
                 [
                     f"### Scenario {s.id}: {s.title}",
                     f"- **Category**: `{s.category}`",
                     f"- **Severity**: **{s.severity}**",
                     f"- **Result**: `{s.status}` (Issue caught by autonomous agent)",
-                    f"- **Video Recording**: [`{Path(s.video_path).name}`]({s.video_path})",
-                    "",
-                    "#### Description",
-                    s.description.strip(),
-                    "",
-                    "#### Approach",
-                    s.approach.strip(),
-                    "",
-                    "#### Steps to Reproduce",
+                    f"- **Video Recording**: [`{Path(s.video_path).name}`]({video_rel})",
                 ]
             )
+
+            if screenshot_rel:
+                lines.append(f"- **Visual Proof**: ![{s.title}]({screenshot_rel})")
+
+            lines.extend([
+                "",
+                "#### Description",
+                s.description.strip(),
+                "",
+                "#### Approach",
+                s.approach.strip(),
+                "",
+                "#### Steps to Reproduce",
+            ])
             for idx, step in enumerate(s.steps_to_reproduce, start=1):
                 lines.append(f"{idx}. {step}")
 
@@ -93,10 +107,34 @@ class SubmissionGenerator:
         scenario_cards = ""
         for s in scenarios:
             steps_html = "".join(f"<li>{step}</li>" for step in s.steps_to_reproduce)
-            video_rel = os.path.relpath(s.video_path, start=str(self.output_dir)) if os.path.exists(s.video_path) else s.video_path
-            
+            video_rel = os.path.relpath(s.video_path, start=str(self.output_dir)).replace("\\", "/") if s.video_path and os.path.exists(s.video_path) else (s.video_path or "").replace("\\", "/")
+            screenshot_rel = os.path.relpath(s.screenshot_path, start=str(self.output_dir)).replace("\\", "/") if s.screenshot_path and os.path.exists(s.screenshot_path) else (s.screenshot_path or "").replace("\\", "/")
+
             badge_color = "#e53e3e" if s.severity in ("CRITICAL", "HIGH") else "#dd6b20"
-            
+
+            screenshot_html = ""
+            if screenshot_rel:
+                screenshot_html = f"""
+                <div class="screenshot-box" style="margin-top: 14px; background: #0f172a; padding: 12px; border-radius: 6px;">
+                    <p style="margin-top:0; font-size: 13px; font-weight: bold; color: #38bdf8;">📸 Visual Defect Snapshot:</p>
+                    <a href="{screenshot_rel}" target="_blank">
+                        <img src="{screenshot_rel}" alt="Defect Snapshot" style="width: 100%; max-height: 420px; object-fit: contain; border-radius: 6px; border: 1px solid #334155; background: #000;" />
+                    </a>
+                </div>
+                """
+
+            video_html = ""
+            if video_rel:
+                video_html = f"""
+                <div class="video-box" style="margin-top: 14px; background: #0f172a; padding: 12px; border-radius: 6px;">
+                    <p style="margin-top:0; font-size: 13px; font-weight: bold; color: #38bdf8;">📹 Screen Recording Proof: <a href="{video_rel}" target="_blank" style="color: #38bdf8; text-decoration: underline;">{Path(s.video_path).name}</a></p>
+                    <video controls width="100%" poster="{screenshot_rel}" style="max-height: 400px; border-radius: 6px; background: #000; border: 1px solid #334155;">
+                        <source src="{video_rel}" type="video/webm">
+                        Your browser does not support HTML5 video.
+                    </video>
+                </div>
+                """
+
             scenario_cards += f"""
             <div class="card">
                 <div class="card-header">
@@ -112,13 +150,8 @@ class SubmissionGenerator:
                         <ol>{steps_html}</ol>
                     </div>
                     {f'<div class="evidence-box"><strong>Evidence:</strong> {s.evidence}</div>' if s.evidence else ''}
-                    <div class="video-box">
-                        <p><strong>Screen Recording Evidence:</strong> <a href="{video_rel}" target="_blank">{Path(s.video_path).name}</a></p>
-                        <video controls width="100%" style="max-height: 400px; border-radius: 6px; background: #000;">
-                            <source src="{video_rel}" type="video/webm">
-                            Your browser does not support HTML5 video.
-                        </video>
-                    </div>
+                    {screenshot_html}
+                    {video_html}
                 </div>
             </div>
             """
@@ -127,6 +160,7 @@ class SubmissionGenerator:
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tireless Hand — Hackathon Evaluation Document</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; line-height: 1.6; }}
@@ -140,14 +174,13 @@ class SubmissionGenerator:
         .category-tag {{ background: #334155; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #94a3b8; }}
         .steps-box {{ background: #0f172a; padding: 12px 20px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #38bdf8; }}
         .evidence-box {{ background: #2d1515; padding: 10px 14px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #ef4444; }}
-        .video-box {{ margin-top: 16px; background: #0f172a; padding: 12px; border-radius: 6px; }}
         a {{ color: #38bdf8; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Tireless Hand — Evaluation Document</h1>
-        <p>Autonomous UI testing system running on deterministic DOM matching, local tiered models, and multi-vector quality auditors.</p>
+        <h1>🦾 Tireless Hand — Evaluation Document</h1>
+        <p>Autonomous UI testing system running on deterministic DOM matching, local tiered models, and multi-vector quality auditors with full video recordings and high-resolution visual evidence.</p>
         
         <div class="section">
             <h2>1. System Design</h2>
